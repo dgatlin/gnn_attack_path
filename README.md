@@ -15,12 +15,50 @@ This project showcases cutting-edge AI techniques for cybersecurity, combining G
 ## 🌟 Key Features
 
 ### 🧠 **Advanced AI Capabilities**
+
+![Graph Neural Networks](docs/images/gnn_example.jpg)
+
+**Graph Neural Networks (GNNs)** are a powerful class of deep learning models designed to work with graph-structured data. Unlike traditional neural networks that process fixed-size inputs, GNNs can handle variable-sized graphs with complex relationships between nodes and edges.
+
+In our attack path analysis, GNNs excel at:
+- **Learning Graph Representations**: Each node (asset) and edge (connection) gets meaningful embeddings
+- **Attention Mechanisms**: The model learns which connections are most important for attack paths (αᵢⱼ coefficients)
+- **Message Passing**: Information flows through the network to identify attack patterns
+- **Scalable Analysis**: Handles networks with thousands of nodes and edges efficiently
+
+The mathematical foundation: `h'ᵢ = σ(Σⱼ∈Nᵢ αᵢⱼWhⱼ)` where nodes aggregate information from their neighbors using learned attention weights.
+
+**Why GNNs for Cybersecurity?**
+- **Network Topology Understanding**: GNNs naturally model network connections and dependencies
+- **Threat Propagation**: Learn how attacks spread through interconnected systems
+- **Contextual Risk Assessment**: Consider both local and global network context
+- **Adaptive Learning**: Continuously improve as new attack patterns emerge
+
 - **Graph Neural Networks**: PyTorch Geometric models (GraphSAGE & GAT) for sophisticated attack path scoring
-- **Hyperparameter Optimization**: Optuna-powered automated tuning for optimal model performance
-- **Experiment Tracking**: MLflow integration for model versioning and performance monitoring
 - **Multi-Agent Orchestration**: LangGraph-based workflow with specialized agents for planning, analysis, and remediation
 - **Advanced RAG**: Graph-aware retrieval with contextual explanations and recommendations
 - **Natural Language Processing**: Conversational interface for complex security queries
+
+### 🔬 **ML Ops & Experiment Tracking**
+- **Model Versioning**: MLflow Model Registry for production-ready model management
+- **Experiment Tracking**: Complete MLflow integration for reproducible experiments
+- **Performance Monitoring**: Real-time model performance tracking and alerting
+- **Model Deployment**: Automated model deployment with rollback capabilities
+- **Artifact Management**: Centralized storage for models, datasets, and experiments
+
+### ⚙️ **Hyperparameter Optimization**
+- **Automated Tuning**: Optuna-powered hyperparameter search with intelligent pruning
+- **Multi-Objective Optimization**: Balance accuracy, latency, and resource usage
+- **Advanced Search**: TPE, CMA-ES, and other state-of-the-art optimization algorithms
+- **Distributed Optimization**: Parallel hyperparameter search across multiple workers
+- **Production Integration**: Seamless integration with model training pipelines
+
+### 🧪 **Comprehensive Testing**
+- **Unit Testing**: Individual component testing with pytest
+- **Integration Testing**: End-to-end workflow validation
+- **Performance Testing**: Load testing with K6 and latency benchmarks
+- **Model Testing**: ML model validation and drift detection
+- **Security Testing**: Penetration testing and vulnerability assessment
 
 ### ⚡ **Performance & Scale**
 - **Sub-2s Response Times**: Optimized for real-time security operations
