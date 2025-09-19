@@ -8,13 +8,24 @@
 [![React](https://img.shields.io/badge/React-18+-blue.svg)](https://reactjs.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
 
-> **A production-ready demonstration of Graph Neural Networks for cybersecurity attack path analysis with intelligent remediation workflows.**
+A production-ready demonstration of Graph Neural Networks for cybersecurity attack path analysis with intelligent remediation workflows.
 
-This project showcases cutting-edge AI techniques for cybersecurity, combining Graph Neural Networks (GNNs), multi-agent orchestration, and advanced RAG to provide sub-2-second attack path analysis with automated remediation recommendations.
+## 🌟 Highlights
+- **Top-K risky paths & assets** with node/edge risk scores and concise, graph-grounded rationales  
+- **Agentic remediation bundles** that minimize blast radius, with predicted Δrisk and IaC diffs (dry-run)  
+- **Simulation mode** to validate fixes before any real changes  
+- **Built-in MLOps**: Optuna HPO + MLflow tracking/registry  
+- **Observability**: Prometheus metrics, Grafana dashboards, structured logs
+
+## 🧠 Why GNNs for Attack Paths?
+- **Topology-aware**: naturally models ingress, IAM, vulns, and lateral reach  
+- **Propagation modeling**: learns how attacks traverse relationships, not just isolated findings  
+- **Contextual risk**: considers local + global graph context for better prioritization  
+- **Scales**: bounded subgraph scoring and caching handle **10K+ nodes** with <2s p95 latency
 
 ## 🌟 Key Features
 
-### 🧠 **Advanced AI Capabilities**
+### 🧠 **Graph Neural Networks & Advanced AI**
 
 ![Graph Neural Networks](docs/images/gnn_example.jpg)
 
@@ -35,9 +46,29 @@ The mathematical foundation: `h'ᵢ = σ(Σⱼ∈Nᵢ αᵢⱼWhⱼ)` where node
 - **Adaptive Learning**: Continuously improve as new attack patterns emerge
 
 - **Graph Neural Networks**: PyTorch Geometric models (GraphSAGE & GAT) for sophisticated attack path scoring
-- **Multi-Agent Orchestration**: LangGraph-based workflow with specialized agents for planning, analysis, and remediation
 - **Advanced RAG**: Graph-aware retrieval with contextual explanations and recommendations
 - **Natural Language Processing**: Conversational interface for complex security queries
+
+### 🤖 **Agentic AI & Multi-Agent Orchestration**
+
+![Agentic AI Architecture](docs/images/agent_ai_diagram.png)
+
+**Intelligent Agentic Workflows** powered by LangGraph orchestrate specialized AI agents that work together to analyze, plan, and remediate cybersecurity threats autonomously.
+
+**Multi-Agent Architecture:**
+- **🧠 Planner Agent**: Analyzes user queries and creates execution plans
+- **🔍 Retriever Agent**: Extracts relevant graph data and context
+- **📊 Scorer Agent**: Evaluates attack paths using GNNs and baseline algorithms
+- **📝 Explainer Agent**: Generates human-readable risk explanations
+- **🛠️ Remediator Agent**: Proposes and simulates security fixes
+- **✅ Verifier Agent**: Validates remediation effectiveness
+
+**Agentic Capabilities:**
+- **Autonomous Decision Making**: Agents make intelligent choices without human intervention
+- **Collaborative Problem Solving**: Multiple agents work together on complex tasks
+- **Adaptive Learning**: Agents improve their performance through experience
+- **Natural Language Interface**: Conversational AI for complex security queries
+- **End-to-End Automation**: Complete attack path analysis to remediation workflow
 
 ### 🔬 **ML Ops & Experiment Tracking**
 - **Model Versioning**: MLflow Model Registry for production-ready model management
