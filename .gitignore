@@ -173,3 +173,14 @@ coverage/
 
 # Performance test results
 k6-results/
+
+# MCP (Model Context Protocol)
+mcp_config.json
+mcp_logs/
+*.mcp.log
+
+# API Keys and Secrets
+*.key
+*.pem
+*.p12
+secrets/

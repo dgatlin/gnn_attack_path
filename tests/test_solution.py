@@ -5,7 +5,7 @@ Comprehensive tests covering all major components.
 import pytest
 import asyncio
 import json
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, AsyncMock
 from pathlib import Path
 
 # Import modules to test
@@ -15,6 +15,8 @@ from scorer.service import AttackPathScoringService
 from agent.planner import AttackPathPlanner
 from agent.remediator import RemediationAgent
 from agent.app import AttackPathAgent
+from agent.mcp_server import GNNAttackPathMCPServer, MCPServerConfig
+from agent.mcp_client_simple import SimpleMCPClient, MCPClientConfig, MCPToolWrapper
 
 
 class TestBaselineScorers:
@@ -305,6 +307,140 @@ class TestPerformance:
         # Should complete within reasonable time
         assert (end_time - start_time) < 5.0  # 5 seconds max
         assert len(paths) >= 0
+
+
+class TestMCPServer:
+    """Test MCP Server functionality."""
+    
+    def setup_method(self):
+        """Set up test configuration."""
+        self.config = MCPServerConfig(
+            neo4j_uri="bolt://localhost:7687",
+            neo4j_user="neo4j",
+            neo4j_password="test_password"
+        )
+    
+    @pytest.mark.asyncio
+    async def test_mcp_server_initialization(self):
+        """Test MCP server initialization."""
+        with patch('agent.mcp_server.Neo4jConnection') as mock_neo4j:
+            mock_neo4j.return_value.connect = AsyncMock()
+            
+            server = GNNAttackPathMCPServer(self.config)
+            assert server.config == self.config
+            assert server.neo4j_conn is None
+            assert server.scoring_service is None
+    
+    def test_mcp_server_configuration(self):
+        """Test MCP server configuration."""
+        server = GNNAttackPathMCPServer(self.config)
+        assert server.config == self.config
+        assert server.neo4j_conn is None
+        assert server.scoring_service is None
+        assert server.remediation_service is None
+    
+    def test_mcp_server_tool_handlers_exist(self):
+        """Test that MCP tool handlers are properly defined."""
+        server = GNNAttackPathMCPServer(self.config)
+        
+        # Check that handler methods exist
+        assert hasattr(server, '_handle_query_graph')
+        assert hasattr(server, '_handle_score_attack_paths')
+        assert hasattr(server, '_handle_get_top_risky_paths')
+        assert hasattr(server, '_handle_analyze_asset_risk')
+        assert hasattr(server, '_handle_propose_remediation')
+        assert hasattr(server, '_handle_get_graph_statistics')
+
+
+class TestMCPClient:
+    """Test MCP Client functionality."""
+    
+    def setup_method(self):
+        """Set up test configuration."""
+        self.config = MCPClientConfig()
+    
+    @pytest.mark.asyncio
+    async def test_mcp_client_initialization(self):
+        """Test MCP client initialization."""
+        client = SimpleMCPClient(self.config)
+        assert client.config == self.config
+        assert client.connected == False
+    
+    @pytest.mark.asyncio
+    async def test_mcp_client_connection(self):
+        """Test MCP client connection."""
+        client = SimpleMCPClient(self.config)
+        await client.connect()
+        assert client.connected == True
+        await client.disconnect()
+        assert client.connected == False
+    
+    @pytest.mark.asyncio
+    async def test_mcp_tool_calls(self):
+        """Test MCP tool calls."""
+        client = SimpleMCPClient(self.config)
+        await client.connect()
+        
+        # Test query_graph tool
+        result = await client.call_tool("query_graph", {
+            "query": "MATCH (n) RETURN n LIMIT 5",
+            "parameters": {}
+        })
+        assert "result_count" in result
+        assert "results" in result
+        
+        # Test score_attack_paths tool
+        result = await client.call_tool("score_attack_paths", {
+            "source_node": "server1",
+            "target_node": "database1"
+        })
+        assert "scored_paths" in result
+        assert len(result["scored_paths"]) > 0
+        
+        await client.disconnect()
+    
+    @pytest.mark.asyncio
+    async def test_mcp_tool_wrapper(self):
+        """Test MCP tool wrapper functionality."""
+        client = SimpleMCPClient(self.config)
+        await client.connect()
+        wrapper = MCPToolWrapper(client)
+        
+        # Test tool wrapper methods
+        result = await wrapper.find_attack_paths("source", "target")
+        assert isinstance(result, list)
+        assert len(result) > 0
+        
+        result = await wrapper.get_risky_assets(5)
+        assert isinstance(result, list)
+        
+        result = await wrapper.assess_asset("test_asset")
+        assert "asset_id" in result
+        
+        await client.disconnect()
+
+
+class TestMCPIntegration:
+    """Test MCP integration end-to-end."""
+    
+    @pytest.mark.asyncio
+    async def test_mcp_workflow(self):
+        """Test complete MCP workflow."""
+        # Test server creation
+        server_config = MCPServerConfig()
+        server = GNNAttackPathMCPServer(server_config)
+        assert server is not None
+        
+        # Test client creation and basic functionality
+        client_config = MCPClientConfig()
+        client = SimpleMCPClient(client_config)
+        await client.connect()
+        
+        # Test basic tool calls
+        result = await client.call_tool("get_graph_statistics", {})
+        assert "total_nodes" in result
+        
+        await client.disconnect()
 
 
 def run_all_tests():

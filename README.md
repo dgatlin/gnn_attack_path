@@ -48,6 +48,7 @@ The mathematical foundation: `h'ᵢ = σ(Σⱼ∈Nᵢ αᵢⱼWhⱼ)` where node
 - **Graph Neural Networks**: PyTorch Geometric models (GraphSAGE & GAT) for sophisticated attack path scoring
 - **Advanced RAG**: Graph-aware retrieval with contextual explanations and recommendations
 - **Natural Language Processing**: Conversational interface for complex security queries
+- **Model Context Protocol (MCP)**: Seamless tool integration for AI agent communication
 
 ### 🤖 **Agentic AI & Multi-Agent Orchestration**
 
@@ -223,6 +224,7 @@ graph TB
 - **Optuna** - Hyperparameter optimization
 - **MLflow** - Experiment tracking and model registry
 - **LangGraph** - Multi-agent orchestration
+- **Model Context Protocol (MCP)** - Seamless AI-to-system communication
 - **Neo4j** - Graph database
 - **Pydantic** - Data validation
 
@@ -261,7 +263,10 @@ gnn-attack-demo/
 ├── 🤖 agent/                   # Multi-agent orchestration
 │   ├── planner.py             # Query planning
 │   ├── remediator.py          # Remediation generation
-│   └── app.py                 # LangGraph workflow
+│   ├── app.py                 # LangGraph workflow
+│   ├── mcp_server.py          # MCP server for tool integration
+│   ├── mcp_client.py          # MCP client for AI communication
+│   └── mcp_agent.py           # Enhanced agent with MCP integration
 ├── 🚀 api/                     # FastAPI backend
 │   └── main.py                # API endpoints
 ├── 🎨 ui/                      # React frontend
