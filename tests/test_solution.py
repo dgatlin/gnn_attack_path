@@ -145,7 +145,9 @@ class TestAgentComponents:
     
     def test_planner_intent_parsing(self):
         """Test intent parsing in planner."""
-        planner = AttackPathPlanner()
+        with patch('agent.planner.ChatOpenAI') as mock_llm:
+            mock_llm.return_value = Mock()
+            planner = AttackPathPlanner()
         
         # Test different query types
         queries = [

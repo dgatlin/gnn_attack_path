@@ -46,7 +46,7 @@ class SyntheticDataGenerator:
             {"cve": "CVE-2021-41773", "cvss": 7.5, "exploit_available": True, "description": "Apache HTTP Server path traversal"},
             {"cve": "CVE-2021-23017", "cvss": 7.5, "exploit_available": True, "description": "nginx DNS resolver vulnerability"},
             {"cve": "CVE-2021-22205", "cvss": 9.8, "exploit_available": True, "description": "GitLab RCE vulnerability"},
-            {"cVE": "CVE-2021-34527", "cvss": 9.8, "exploit_available": True, "description": "Windows Print Spooler RCE"},
+            {"cve": "CVE-2021-34527", "cvss": 9.8, "exploit_available": True, "description": "Windows Print Spooler RCE"},
             {"cve": "CVE-2021-26855", "cvss": 9.1, "exploit_available": True, "description": "Microsoft Exchange Server RCE"},
             {"cve": "CVE-2021-21972", "cvss": 9.8, "exploit_available": True, "description": "VMware vCenter Server RCE"},
             {"cve": "CVE-2021-20016", "cvss": 9.8, "exploit_available": True, "description": "SonicWall SMA RCE"},

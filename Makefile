@@ -21,7 +21,28 @@ build:
 
 # Run tests
 test:
-	python -m pytest tests/ -v
+	@echo "Running all tests..."
+	python -m pytest tests/ -v --cov=. --cov-report=term-missing
+
+test-unit:
+	@echo "Running unit tests..."
+	python -m pytest tests/unit/ -v --cov=. --cov-report=term-missing
+
+test-integration:
+	@echo "Running integration tests..."
+	python -m pytest tests/integration/ -v --cov=. --cov-report=term-missing
+
+test-comprehensive:
+	@echo "Running comprehensive test suite..."
+	python -m pytest tests/test_comprehensive.py -v --cov=. --cov-report=term-missing
+
+test-runner:
+	@echo "Running organized test suite..."
+	python tests/test_runner.py all
+
+test-specific:
+	@echo "Running specific module tests..."
+	python tests/test_runner.py module --module $(MODULE)
 
 # Clean up everything
 clean:

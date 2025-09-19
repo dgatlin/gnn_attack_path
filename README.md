@@ -71,6 +71,35 @@ The mathematical foundation: `h'ᵢ = σ(Σⱼ∈Nᵢ αᵢⱼWhⱼ)` where node
 - **Natural Language Interface**: Conversational AI for complex security queries
 - **End-to-End Automation**: Complete attack path analysis to remediation workflow
 
+### 🔗 **Model Context Protocol (MCP) Integration**
+
+**Seamless AI-to-System Communication** through standardized protocol that enables AI agents to interact with external systems, databases, and tools in a consistent, language-agnostic way.
+
+**MCP Architecture:**
+- **🛠️ MCP Server**: Exposes graph operations as standardized tools
+- **🔌 MCP Client**: Provides seamless communication interface
+- **🤖 Enhanced Agents**: AI agents with native MCP tool access
+- **📡 Protocol Standard**: Language-agnostic communication layer
+
+**MCP Tools Available:**
+- **`query_graph`**: Execute Cypher queries against Neo4j database
+- **`score_attack_paths`**: Score attack paths using GNN models
+- **`get_top_risky_paths`**: Retrieve most risky paths in the graph
+- **`analyze_asset_risk`**: Analyze risk for specific assets
+- **`propose_remediation`**: Suggest security fixes and remediation
+- **`get_graph_statistics`**: Get overall graph metrics and insights
+
+**Key Benefits:**
+- **🔧 Seamless Integration**: AI agents can easily access graph data without knowing database specifics
+- **🌐 Language Agnostic**: Works across Python, TypeScript, and other languages
+- **📈 Scalable Architecture**: Easy to add new tools and capabilities
+- **🔒 Secure Communication**: Built-in authentication and error handling
+- **🧪 Testable Design**: Comprehensive test coverage for all MCP components
+- **⚡ High Performance**: Async communication with sub-2s response times
+
+**Real-World Impact:**
+Instead of hard-coding database connections, AI agents can now use natural language queries like *"Find attack paths from external servers to our database"* and the MCP protocol automatically translates this into the appropriate graph operations, making the system more maintainable and extensible.
+
 ### 🔬 **ML Ops & Experiment Tracking**
 - **Model Versioning**: MLflow Model Registry for production-ready model management
 - **Experiment Tracking**: Complete MLflow integration for reproducible experiments
