@@ -8,7 +8,7 @@
 [![React](https://img.shields.io/badge/React-18+-blue.svg)](https://reactjs.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
 
-A production-ready demonstration of Graph Neural Networks for cybersecurity attack path analysis with intelligent remediation workflows.
+A production-ready demonstration of Graph Neural Networks (GNNs) for cybersecurity attack path analysis with intelligent remediation workflows. This project represents a sophisticated integration of multiple Advanced AI technologies - from Graph Neural Networks and Multi-Agent Systems to RAG and MCP - all working together to solve one of the most challenging problems in cybersecurity: understanding and defending against complex attack paths in real-time. It's not just AI, it's Advanced AI that can reason about complex relationships, make autonomous decisions, and continuously learn and adapt.
 
 ## 🌟 Highlights
 - **Top-K risky paths & assets** with node/edge risk scores and concise, graph-grounded rationales  
@@ -17,7 +17,7 @@ A production-ready demonstration of Graph Neural Networks for cybersecurity atta
 - **Built-in MLOps**: Optuna HPO + MLflow tracking/registry  
 - **Observability**: Prometheus metrics, Grafana dashboards, structured logs
 
-## 🧠 Why GNNs for Attack Paths?
+## 🧠 Why Graph Neural Networks for Attack Paths?
 - **Topology-aware**: naturally models ingress, IAM, vulns, and lateral reach  
 - **Propagation modeling**: learns how attacks traverse relationships, not just isolated findings  
 - **Contextual risk**: considers local + global graph context for better prioritization  
@@ -25,7 +25,7 @@ A production-ready demonstration of Graph Neural Networks for cybersecurity atta
 
 ## 🌟 Key Features
 
-### 🧠 **Graph Neural Networks & Advanced AI**
+### 🧠 **Graph Neural Networks (GNNs) - The Core AI Innovation**
 
 ![Graph Neural Networks](docs/images/gnn_example.jpg)
 
@@ -426,25 +426,3 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
-
-- **PyTorch Geometric** team for excellent GNN tools
-- **LangChain** team for agent orchestration framework
-- **Neo4j** team for graph database technology
-- **FastAPI** team for the amazing API framework
-
-## 📞 Support
-
-- **Documentation**: [Demo Guide](DEMO_GUIDE.md)
-- **Issues**: [GitHub Issues](https://github.com/your-org/gnn-attack-demo/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/gnn-attack-demo/discussions)
-
----
-
-<div align="center">
-
-**Built with ❤️ for the cybersecurity community**
-
-[⭐ Star this repo](https://github.com/your-org/gnn-attack-demo) • [🐛 Report Bug](https://github.com/your-org/gnn-attack-demo/issues) • [💡 Request Feature](https://github.com/your-org/gnn-attack-demo/issues)
-
-</div>
