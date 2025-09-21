@@ -135,15 +135,46 @@ Instead of hard-coding database connections, AI agents can now use natural langu
 
 ## 🎮 Live Demo
 
-**Frontend**: http://localhost:3000 | **API**: http://localhost:8000
+### **🚀 Experience AI-Powered Cybersecurity in Action**
+
+**Try the fully functional demo** with a modern React frontend and FastAPI backend. See GNNs in action as they analyze attack paths, provide AI-powered security insights, and simulate remediation strategies in real-time.
+
+**Access**: [Frontend](http://localhost:3000) | [API](http://localhost:8000) | [Docs](http://localhost:8000/docs)
 
 ```bash
+# One-command setup
 python test_api.py && cd ui && npm start
 ```
 
-![AI Query Interface](docs/images/ai_query_interface.png)
+**See the demo in action with these four key interfaces:**
 
-**Features**: Attack path analysis, AI queries, remediation simulation, metrics dashboard
+![Attack Path Analysis](docs/images/attack_path.png)
+*Visual attack path discovery with 92% risk scoring and path flow visualization*
+**What it does**: Analyzes potential attack routes to critical assets, scoring risk levels and showing the complete attack chain from external entry points to target systems.
+
+![AI Query Interface](docs/images/ai_query_1.png)
+*Natural language security consultation with intelligent AI responses*
+**What it does**: Allows users to ask security questions in plain English and receive contextual AI analysis, recommendations, and explanations about their security posture.
+
+![Remediation Simulation](docs/images/remediation.png)
+*Security action selection with impact/effort analysis and simulation*
+**What it does**: Enables users to select security fixes, simulate their effectiveness, and see risk reduction percentages before implementing changes in production.
+
+![Metrics Dashboard](docs/images/metrics.png)
+*Real-time performance monitoring with KPIs and algorithm comparison*
+**What it does**: Provides live system performance metrics, security scores, response times, and algorithm performance comparisons for monitoring and optimization.
+
+### **🧠 How It Works**
+
+The GNN learns attack patterns from historical cybersecurity data, enabling it to identify high-risk attack paths and predict potential vulnerabilities. The agentic system then autonomously analyzes these patterns, proposes intelligent remediation strategies, and simulates their effectiveness—all through natural language interaction. This creates an end-to-end AI workflow that transforms raw security data into actionable insights and automated responses.
+
+### **✨ Key Capabilities**
+
+- **🎯 Attack Path Discovery**: Visual analysis with risk scoring and path visualization
+- **🤖 AI-Powered Queries**: Natural language security consultation and recommendations  
+- **🛠️ Remediation Simulation**: Test security fixes with risk reduction analysis
+- **📊 Real-time Metrics**: Performance monitoring and algorithm comparison
+- **⚡ Sub-2s Response**: Lightning-fast analysis and recommendations
 
 ## 🚀 Quick Start
 
