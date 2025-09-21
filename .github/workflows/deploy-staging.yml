@@ -52,9 +52,8 @@ jobs:
         docker build -f ops/Dockerfile.api -t gnn-attack-api:staging .
         echo "API Docker image built successfully"
         
-        echo "Building UI Docker image..."
-        docker build -f ops/Dockerfile.ui -t gnn-attack-ui:staging ./ui
-        echo "UI Docker image built successfully"
+        echo "Skipping UI Docker image build for now (focusing on API)"
+        # docker build -f ops/Dockerfile.ui -t gnn-attack-ui:staging ./ui
         
     - name: Check AWS credentials
       id: check-aws

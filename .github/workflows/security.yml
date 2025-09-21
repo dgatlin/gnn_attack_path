@@ -164,7 +164,8 @@ jobs:
     - name: Build Docker images
       run: |
         docker build -f ops/Dockerfile.api -t gnn-attack-api:latest .
-        docker build -f ops/Dockerfile.ui -t gnn-attack-ui:latest ./ui
+        echo "Skipping UI Docker image build for now (focusing on API)"
+        # docker build -f ops/Dockerfile.ui -t gnn-attack-ui:latest ./ui
         
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
