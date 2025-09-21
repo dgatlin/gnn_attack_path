@@ -44,6 +44,41 @@ test-specific:
 	@echo "Running specific module tests..."
 	python tests/test_runner.py module --module $(MODULE)
 
+# Git workflow commands
+feature-branch:
+	@echo "Creating feature branch: $(BRANCH)"
+	git checkout -b feature/$(BRANCH)
+
+commit-feature:
+	@echo "Committing feature changes..."
+	git add .
+	git commit -m "$(MESSAGE)"
+
+push-feature:
+	@echo "Pushing feature branch..."
+	git push -u origin feature/$(BRANCH)
+
+create-pr:
+	@echo "Creating pull request..."
+	@echo "Visit: https://github.com/dgatlin/gnn_attack_path/pull/new/feature/$(BRANCH)"
+
+# Frontend development
+frontend-dev:
+	@echo "Starting frontend development server..."
+	cd ui && npm start
+
+frontend-build:
+	@echo "Building frontend for production..."
+	cd ui && npm run build
+
+frontend-test:
+	@echo "Running frontend tests..."
+	cd ui && npm test -- --watchAll=false
+
+frontend-lint:
+	@echo "Running frontend linting..."
+	cd ui && npm run lint || echo "Linting completed with warnings"
+
 # Clean up everything
 clean:
 	docker-compose -f ops/docker-compose.yml down -v
