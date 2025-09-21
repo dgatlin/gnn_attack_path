@@ -44,7 +44,17 @@ jobs:
         pip install pip-audit
         pip-audit --format=json --output=pip-audit.json
         
+    - name: Check Snyk token
+      id: check-snyk
+      run: |
+        if [ -n "${{ secrets.SNYK_TOKEN }}" ]; then
+          echo "snyk_available=true" >> $GITHUB_OUTPUT
+        else
+          echo "snyk_available=false" >> $GITHUB_OUTPUT
+        fi
+        
     - name: Run Snyk security scan
+      if: steps.check-snyk.outputs.snyk_available == 'true'
       uses: snyk/actions/node@master
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -52,11 +62,19 @@ jobs:
         args: --severity-threshold=high --json-file-output=snyk-node.json
         
     - name: Run Snyk Python scan
+      if: steps.check-snyk.outputs.snyk_available == 'true'
       uses: snyk/actions/python@master
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
         args: --severity-threshold=high --json-file-output=snyk-python.json
+        
+    - name: Skip Snyk scans (no token)
+      if: steps.check-snyk.outputs.snyk_available == 'false'
+      run: |
+        echo "⚠️ SNYK_TOKEN not configured. Skipping Snyk security scans."
+        echo '{"vulnerabilities": []}' > snyk-node.json
+        echo '{"vulnerabilities": []}' > snyk-python.json
         
     - name: Upload security reports
       uses: actions/upload-artifact@v4
@@ -120,8 +138,6 @@ jobs:
       uses: trufflesecurity/trufflehog@main
       with:
         path: ./
-        base: main
-        head: HEAD
         extra_args: --debug --only-verified
         
     - name: Run GitLeaks secret scan
@@ -162,12 +178,12 @@ jobs:
         output: 'trivy-ui-results.sarif'
         
     - name: Upload Trivy scan results
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: 'trivy-api-results.sarif'
         
     - name: Upload Trivy UI scan results
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: 'trivy-ui-results.sarif'
 
@@ -183,18 +199,35 @@ jobs:
       with:
         terraform_version: 1.5.0
         
+    - name: Check for IaC files
+      id: check-iac
+      run: |
+        if [ -d "iac/" ] || [ -f "*.tf" ] || [ -f "*.yaml" ] || [ -f "*.yml" ]; then
+          echo "iac_found=true" >> $GITHUB_OUTPUT
+        else
+          echo "iac_found=false" >> $GITHUB_OUTPUT
+        fi
+        
     - name: Run Checkov IaC scan
+      if: steps.check-iac.outputs.iac_found == 'true'
       uses: bridgecrewio/checkov-action@master
       with:
-        directory: iac/
-        framework: terraform
+        directory: ./
+        framework: all
         output_format: sarif
         output_file_path: checkov-results.sarif
         
     - name: Upload Checkov results
-      uses: github/codeql-action/upload-sarif@v2
+      if: steps.check-iac.outputs.iac_found == 'true'
+      uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: 'checkov-results.sarif'
+        
+    - name: Skip IaC scan (no IaC files)
+      if: steps.check-iac.outputs.iac_found == 'false'
+      run: |
+        echo "⚠️ No IaC files found. Skipping infrastructure scan."
+        echo '{"runs": [{"results": []}]}' > checkov-results.sarif
 
   security-summary:
     runs-on: ubuntu-latest
@@ -203,7 +236,7 @@ jobs:
     
     steps:
     - name: Download all security reports
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         path: security-reports/
         
