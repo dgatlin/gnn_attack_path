@@ -5,8 +5,13 @@ Tests agent planning, remediation, and orchestration in isolation.
 """
 import pytest
 import asyncio
+import os
 from unittest.mock import Mock, patch, AsyncMock
 from typing import Dict, List, Any
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 from agent.planner import AttackPathPlanner
 from agent.remediator import RemediationAgent
