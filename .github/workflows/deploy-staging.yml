@@ -50,7 +50,17 @@ jobs:
         docker build -f ops/Dockerfile.api -t gnn-attack-api:staging .
         docker build -f ops/Dockerfile.ui -t gnn-attack-ui:staging ./ui
         
+    - name: Check AWS credentials
+      id: check-aws
+      run: |
+        if [ -n "${{ secrets.AWS_ACCESS_KEY_ID }}" ] && [ -n "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ]; then
+          echo "aws_available=true" >> $GITHUB_OUTPUT
+        else
+          echo "aws_available=false" >> $GITHUB_OUTPUT
+        fi
+        
     - name: Configure AWS credentials
+      if: steps.check-aws.outputs.aws_available == 'true'
       uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -58,10 +68,12 @@ jobs:
         aws-region: us-east-1
         
     - name: Login to Amazon ECR
+      if: steps.check-aws.outputs.aws_available == 'true'
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2
         
     - name: Build, tag, and push API image to Amazon ECR
+      if: steps.check-aws.outputs.aws_available == 'true'
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: gnn-attack-api
@@ -71,6 +83,7 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         
     - name: Build, tag, and push UI image to Amazon ECR
+      if: steps.check-aws.outputs.aws_available == 'true'
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: gnn-attack-ui
@@ -80,6 +93,7 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         
     - name: Deploy to ECS
+      if: steps.check-aws.outputs.aws_available == 'true'
       run: |
         aws ecs update-service \
           --cluster gnn-attack-staging \
@@ -91,12 +105,14 @@ jobs:
           --force-new-deployment
           
     - name: Wait for deployment to complete
+      if: steps.check-aws.outputs.aws_available == 'true'
       run: |
         aws ecs wait services-stable \
           --cluster gnn-attack-staging \
           --services gnn-attack-api gnn-attack-ui
           
     - name: Run smoke tests
+      if: steps.check-aws.outputs.aws_available == 'true'
       run: |
         # Get the load balancer URL
         LB_URL=$(aws elbv2 describe-load-balancers --names gnn-attack-staging --query 'LoadBalancers[0].DNSName' --output text)
@@ -111,6 +127,13 @@ jobs:
         curl -f https://$LB_URL/ || exit 1
         
         echo "Smoke tests passed!"
+        
+    - name: Skip deployment (no AWS credentials)
+      if: steps.check-aws.outputs.aws_available == 'false'
+      run: |
+        echo "⚠️ AWS credentials not configured. Skipping deployment."
+        echo "Docker images built successfully but not deployed."
+        echo "To enable deployment, configure AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY secrets."
         
     - name: Update deployment status
       uses: actions/github-script@v7
@@ -131,7 +154,17 @@ jobs:
     if: always()
     
     steps:
+    - name: Check Slack webhook
+      id: check-slack
+      run: |
+        if [ -n "${{ secrets.SLACK_WEBHOOK }}" ]; then
+          echo "slack_available=true" >> $GITHUB_OUTPUT
+        else
+          echo "slack_available=false" >> $GITHUB_OUTPUT
+        fi
+        
     - name: Notify Slack
+      if: steps.check-slack.outputs.slack_available == 'true'
       uses: 8398a7/action-slack@v3
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
@@ -144,8 +177,9 @@ jobs:
             "text": "GNN Attack Path Demo - Staging Deployment\nStatus: ${{ job.status }}\nCommit: ${{ github.sha }}\nAuthor: ${{ github.actor }}"
           }
           
-    # Teams notification removed due to linter issues
+    # Teams notification removed due to action compatibility issues
     # - name: Notify Teams
+    #   if: ${{ secrets.TEAMS_WEBHOOK }}
     #   uses: skitionek/notify-microsoft-teams@master
     #   with:
     #     webhook_url: ${{ secrets.TEAMS_WEBHOOK }}
@@ -165,7 +199,17 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
+    - name: Check AWS credentials
+      id: check-aws-rollback
+      run: |
+        if [ -n "${{ secrets.AWS_ACCESS_KEY_ID }}" ] && [ -n "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ]; then
+          echo "aws_available=true" >> $GITHUB_OUTPUT
+        else
+          echo "aws_available=false" >> $GITHUB_OUTPUT
+        fi
+      
     - name: Configure AWS credentials
+      if: steps.check-aws-rollback.outputs.aws_available == 'true'
       uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -173,6 +217,7 @@ jobs:
         aws-region: us-east-1
         
     - name: Rollback to previous version
+      if: steps.check-aws-rollback.outputs.aws_available == 'true'
       run: |
         # Get the previous task definition
         PREVIOUS_TD=$(aws ecs describe-services \
@@ -192,7 +237,23 @@ jobs:
           --service gnn-attack-ui \
           --task-definition $PREVIOUS_TD
           
+    - name: Skip rollback (no AWS credentials)
+      if: steps.check-aws-rollback.outputs.aws_available == 'false'
+      run: |
+        echo "⚠️ AWS credentials not configured. Cannot perform rollback."
+        echo "Deployment failed but rollback skipped due to missing credentials."
+          
+    - name: Check Slack webhook for rollback
+      id: check-slack-rollback
+      run: |
+        if [ -n "${{ secrets.SLACK_WEBHOOK }}" ]; then
+          echo "slack_available=true" >> $GITHUB_OUTPUT
+        else
+          echo "slack_available=false" >> $GITHUB_OUTPUT
+        fi
+        
     - name: Notify rollback
+      if: steps.check-slack-rollback.outputs.slack_available == 'true'
       uses: 8398a7/action-slack@v3
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
