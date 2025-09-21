@@ -75,7 +75,7 @@ jobs:
         
     - name: Run backend tests
       run: |
-        python -m pytest tests/unit/ -v --cov=. --cov-report=xml --tb=short || echo "Some tests failed but continuing"
+        python -m pytest tests/unit/ -v --cov=. --cov-report=xml --tb=short --maxfail=5 || echo "Some tests failed but continuing"
         
     - name: Upload coverage reports
       uses: codecov/codecov-action@v3

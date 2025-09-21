@@ -41,9 +41,9 @@ const MetricsDashboard = () => {
       setMetrics(mockMetrics);
     };
     loadMetrics();
-  }, [timeRange]);
+  }, [timeRange, mockMetrics]);
 
-  const COLORS = ['#ef4444', '#f59e0b', '#10b981'];
+  // const COLORS = ['#ef4444', '#f59e0b', '#10b981'];
 
   if (!metrics) {
     return (

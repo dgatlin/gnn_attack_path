@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Zap, Send, Bot, AlertCircle } from 'lucide-react';
+import { Zap, Send, Bot } from 'lucide-react';
 
 const QueryInterface = () => {
   const [query, setQuery] = useState('');

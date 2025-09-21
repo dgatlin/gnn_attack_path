@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, Play, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Shield, Play, CheckCircle } from 'lucide-react';
 
 const RemediationPanel = () => {
   const [selectedActions, setSelectedActions] = useState([]);
