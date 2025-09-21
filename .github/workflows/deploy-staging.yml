@@ -140,18 +140,7 @@ jobs:
         echo "Docker images built successfully but not deployed."
         echo "To enable deployment, configure AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY secrets."
         
-    - name: Update deployment status
-      uses: actions/github-script@v7
-      with:
-        script: |
-          github.rest.repos.createDeploymentStatus({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            deployment_id: context.payload.deployment.id,
-            state: 'success',
-            environment: 'staging',
-            description: 'Deployment to staging completed successfully'
-          });
+    # Removed Update deployment status step - was causing GitHub API permissions issues
 
   notify-deployment:
     runs-on: ubuntu-latest

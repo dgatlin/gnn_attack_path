@@ -174,10 +174,7 @@ jobs:
         format: 'sarif'
         output: 'trivy-api-results.sarif'
         
-    - name: Upload Trivy scan results
-      uses: github/codeql-action/upload-sarif@v3
-      with:
-        sarif_file: 'trivy-api-results.sarif'
+    # Removed Upload Trivy scan results step - was causing GitHub API permissions issues
 
   infrastructure-scan:
     runs-on: ubuntu-latest
