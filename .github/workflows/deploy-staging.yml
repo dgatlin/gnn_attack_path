@@ -43,12 +43,19 @@ jobs:
     - name: Build frontend
       run: |
         cd ui
+        echo "Building frontend..."
         npm run build
+        echo "Frontend build completed successfully"
         
     - name: Build Docker images
       run: |
+        echo "Building API Docker image..."
         docker build -f ops/Dockerfile.api -t gnn-attack-api:staging .
+        echo "API Docker image built successfully"
+        
+        echo "Building UI Docker image..."
         docker build -f ops/Dockerfile.ui -t gnn-attack-ui:staging ./ui
+        echo "UI Docker image built successfully"
         
     - name: Check AWS credentials
       id: check-aws
