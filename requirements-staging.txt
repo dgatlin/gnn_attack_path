@@ -1,0 +1,39 @@
+# Core dependencies for staging deployment
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+python-multipart==0.0.6
+
+# Graph database
+neo4j==5.15.0
+py2neo==2021.2.4
+
+# Basic ML dependencies (lightweight)
+numpy==1.24.3
+scikit-learn==1.3.2
+
+# Agent orchestration (minimal)
+langchain==0.0.350
+langchain-openai==0.0.2
+
+# Data processing
+pandas==2.1.4
+networkx==3.2.1
+
+# API and utilities
+httpx==0.25.2
+aiofiles==23.2.1
+python-dotenv==1.0.0
+pydantic-settings==2.1.0
+
+# Monitoring and observability
+structlog==23.2.0
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+
+# Development
+black==23.11.0
+isort==5.12.0
+flake8==6.1.0
