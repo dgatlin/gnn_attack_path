@@ -1,0 +1,204 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - staging-2
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    environment: staging
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: ui/package-lock.json
+        
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        pip install torch==2.1.1
+        pip install -r requirements.txt
+        cd ui && npm ci
+        
+    - name: Build frontend
+      run: |
+        cd ui
+        npm run build
+        
+    - name: Build Docker images
+      run: |
+        docker build -f ops/Dockerfile.api -t gnn-attack-api:staging .
+        docker build -f ops/Dockerfile.ui -t gnn-attack-ui:staging ./ui
+        
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+        
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+        
+    - name: Build, tag, and push API image to Amazon ECR
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: gnn-attack-api
+        IMAGE_TAG: staging-${{ github.sha }}
+      run: |
+        docker tag gnn-attack-api:staging $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        
+    - name: Build, tag, and push UI image to Amazon ECR
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: gnn-attack-ui
+        IMAGE_TAG: staging-${{ github.sha }}
+      run: |
+        docker tag gnn-attack-ui:staging $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        
+    - name: Deploy to ECS
+      run: |
+        aws ecs update-service \
+          --cluster gnn-attack-staging \
+          --service gnn-attack-api \
+          --force-new-deployment
+        aws ecs update-service \
+          --cluster gnn-attack-staging \
+          --service gnn-attack-ui \
+          --force-new-deployment
+          
+    - name: Wait for deployment to complete
+      run: |
+        aws ecs wait services-stable \
+          --cluster gnn-attack-staging \
+          --services gnn-attack-api gnn-attack-ui
+          
+    - name: Run smoke tests
+      run: |
+        # Get the load balancer URL
+        LB_URL=$(aws elbv2 describe-load-balancers --names gnn-attack-staging --query 'LoadBalancers[0].DNSName' --output text)
+        
+        # Wait for services to be ready
+        sleep 30
+        
+        # Test API health
+        curl -f https://$LB_URL/api/health || exit 1
+        
+        # Test UI
+        curl -f https://$LB_URL/ || exit 1
+        
+        echo "Smoke tests passed!"
+        
+    - name: Update deployment status
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.repos.createDeploymentStatus({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            deployment_id: context.payload.deployment.id,
+            state: 'success',
+            environment: 'staging',
+            description: 'Deployment to staging completed successfully'
+          });
+
+  notify-deployment:
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: always()
+    
+    steps:
+    - name: Notify Slack
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#deployments'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        fields: repo,message,commit,author,action,eventName,ref,workflow
+        text: |
+          GNN Attack Path Demo - Staging Deployment
+          Status: ${{ job.status }}
+          Commit: ${{ github.sha }}
+          Author: ${{ github.actor }}
+          
+    - name: Notify Teams
+      uses: skitionek/notify-microsoft-teams@master
+      with:
+        webhook_url: ${{ secrets.TEAMS_WEBHOOK }}
+        title: 'GNN Attack Path Demo - Staging Deployment'
+        summary: |
+          Status: ${{ job.status }}
+          Commit: ${{ github.sha }}
+          Author: ${{ github.actor }}
+          Environment: Staging
+
+  rollback-staging:
+    runs-on: ubuntu-latest
+    if: failure()
+    needs: deploy-staging
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+        
+    - name: Rollback to previous version
+      run: |
+        # Get the previous task definition
+        PREVIOUS_TD=$(aws ecs describe-services \
+          --cluster gnn-attack-staging \
+          --services gnn-attack-api \
+          --query 'services[0].deployments[1].taskDefinition' \
+          --output text)
+        
+        # Update service to previous task definition
+        aws ecs update-service \
+          --cluster gnn-attack-staging \
+          --service gnn-attack-api \
+          --task-definition $PREVIOUS_TD
+          
+        aws ecs update-service \
+          --cluster gnn-attack-staging \
+          --service gnn-attack-ui \
+          --task-definition $PREVIOUS_TD
+          
+    - name: Notify rollback
+      uses: 8398a7/action-slack@v3
+      with:
+        status: failure
+        channel: '#deployments'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        text: |
+          🚨 ROLLBACK INITIATED
+          GNN Attack Path Demo - Staging
+          Deployment failed, rolling back to previous version

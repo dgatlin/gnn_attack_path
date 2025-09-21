@@ -1,0 +1,165 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+    paths: [ 'api/**', 'agent/**', 'scorer/**', 'graph/**', 'data/**', 'tests/**', 'requirements.txt' ]
+  pull_request:
+    branches: [ main, develop ]
+    paths: [ 'api/**', 'agent/**', 'scorer/**', 'graph/**', 'data/**', 'tests/**', 'requirements.txt' ]
+
+jobs:
+  backend-test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python-version: [3.11, 3.12]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential
+        
+    - name: Install Python dependencies
+      run: |
+        # Install PyTorch first to avoid build issues
+        pip install torch==2.1.1
+        # Then install the rest
+        pip install -r requirements.txt
+        
+    - name: Set up environment variables
+      run: |
+        echo "OPENAI_API_KEY=test-key" >> $GITHUB_ENV
+        echo "NEO4J_URI=bolt://localhost:7687" >> $GITHUB_ENV
+        echo "NEO4J_USERNAME=neo4j" >> $GITHUB_ENV
+        echo "NEO4J_PASSWORD=password" >> $GITHUB_ENV
+        echo "MLFLOW_TRACKING_URI=sqlite:///mlflow.db" >> $GITHUB_ENV
+        echo "OPTUNA_STORAGE=sqlite:///optuna.db" >> $GITHUB_ENV
+        
+    - name: Run linting
+      run: |
+        flake8 api/ agent/ scorer/ graph/ data/ tests/ --max-line-length=100 --ignore=E203,W503
+        black --check api/ agent/ scorer/ graph/ data/ tests/
+        isort --check-only api/ agent/ scorer/ graph/ data/ tests/
+        
+    - name: Run type checking
+      run: |
+        mypy api/ agent/ scorer/ graph/ data/ --ignore-missing-imports
+        
+    - name: Run unit tests
+      run: |
+        python -m pytest tests/unit/ -v --cov=. --cov-report=xml --cov-report=html --tb=short
+        
+    - name: Run integration tests
+      run: |
+        python -m pytest tests/integration/ -v --tb=short
+        
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: backend
+        name: backend-coverage-${{ matrix.python-version }}
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      with:
+        name: backend-test-results-${{ matrix.python-version }}
+        path: |
+          coverage.xml
+          htmlcov/
+        retention-days: 7
+
+  backend-security:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        pip install torch==2.1.1
+        pip install -r requirements.txt
+        pip install bandit safety
+        
+    - name: Run Bandit security scan
+      run: |
+        bandit -r api/ agent/ scorer/ graph/ data/ -f json -o bandit-report.json
+        
+    - name: Run Safety vulnerability scan
+      run: |
+        safety check --json --output safety-report.json
+        
+    - name: Upload security reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: backend-security-reports
+        path: |
+          bandit-report.json
+          safety-report.json
+        retention-days: 30
+
+  backend-performance:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        pip install torch==2.1.1
+        pip install -r requirements.txt
+        pip install locust
+        
+    - name: Set up environment variables
+      run: |
+        echo "OPENAI_API_KEY=test-key" >> $GITHUB_ENV
+        echo "NEO4J_URI=bolt://localhost:7687" >> $GITHUB_ENV
+        echo "NEO4J_USERNAME=neo4j" >> $GITHUB_ENV
+        echo "NEO4J_PASSWORD=password" >> $GITHUB_ENV
+        
+    - name: Start test API
+      run: |
+        python test_api.py &
+        sleep 10
+        
+    - name: Run performance tests
+      run: |
+        locust -f ops/k6/performance_test.py --headless -u 10 -r 2 -t 30s --html performance-report.html
+        
+    - name: Upload performance results
+      uses: actions/upload-artifact@v4
+      with:
+        name: backend-performance-results
+        path: performance-report.html
+        retention-days: 7

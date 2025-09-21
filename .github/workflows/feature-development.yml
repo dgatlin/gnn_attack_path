@@ -14,25 +14,39 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
+    - name: Detect changes
+      id: changes
+      run: |
+        if git diff --name-only HEAD~1 HEAD | grep -E '^ui/' > /dev/null; then
+          echo "frontend_changed=true" >> $GITHUB_OUTPUT
+        fi
+        if git diff --name-only HEAD~1 HEAD | grep -E '^(api/|agent/|scorer/|graph/|data/|tests/)' > /dev/null; then
+          echo "backend_changed=true" >> $GITHUB_OUTPUT
+        fi
+        
     - name: Validate frontend
-      if: contains(github.event.head_commit.message, 'ui/') || contains(github.event.head_commit.message, 'frontend')
+      if: steps.changes.outputs.frontend_changed == 'true'
       run: |
         echo "Frontend changes detected, running frontend validation..."
-        # This would run frontend-specific tests
-        echo "Frontend validation completed"
+        # Trigger frontend CI workflow
+        gh workflow run ci-frontend.yml --ref ${{ github.ref }}
+        echo "Frontend validation triggered"
         
     - name: Validate backend
-      if: contains(github.event.head_commit.message, 'api/') || contains(github.event.head_commit.message, 'backend')
+      if: steps.changes.outputs.backend_changed == 'true'
       run: |
         echo "Backend changes detected, running backend validation..."
-        # This would run backend-specific tests
-        echo "Backend validation completed"
+        # Trigger backend CI workflow
+        gh workflow run ci-backend.yml --ref ${{ github.ref }}
+        echo "Backend validation triggered"
         
-    - name: Run full test suite
+    - name: Run integration tests
+      if: steps.changes.outputs.frontend_changed == 'true' || steps.changes.outputs.backend_changed == 'true'
       run: |
-        echo "Running comprehensive test suite for feature branch..."
-        # This would run all tests
-        echo "All tests passed!"
+        echo "Running integration tests for feature branch..."
+        # Trigger integration CI workflow
+        gh workflow run ci-integration.yml --ref ${{ github.ref }}
+        echo "Integration tests triggered"
 
   security-scan:
     runs-on: ubuntu-latest
@@ -44,14 +58,9 @@ jobs:
     - name: Run security scan
       run: |
         echo "Running security vulnerability scan..."
-        # This would run security scanning tools
-        echo "Security scan completed"
-        
-    - name: Check for secrets
-      run: |
-        echo "Scanning for accidentally committed secrets..."
-        # This would check for API keys, passwords, etc.
-        echo "Secret scan completed"
+        # Trigger security workflow
+        gh workflow run security.yml --ref ${{ github.ref }}
+        echo "Security scan triggered"
 
   build-and-deploy-preview:
     runs-on: ubuntu-latest
