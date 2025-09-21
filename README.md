@@ -135,65 +135,15 @@ Instead of hard-coding database connections, AI agents can now use natural langu
 
 ## 🎮 Live Demo
 
-### **🚀 Try It Now**
+**Frontend**: http://localhost:3000 | **API**: http://localhost:8000
 
-The GNN Attack Path Demo is **live and ready to test**! Experience AI-powered cybersecurity analysis with a working frontend and backend.
-
-#### **🌐 Access the Demo**
-- **Frontend**: http://localhost:3000 (React UI)
-- **Backend API**: http://localhost:8000 (FastAPI)
-- **API Docs**: http://localhost:8000/docs (Swagger UI)
-
-#### **🎯 Quick Start**
 ```bash
-# 1. Start the backend API
-python test_api.py
-
-# 2. Start the frontend (in another terminal)
-cd ui && npm start
-
-# 3. Open your browser
-open http://localhost:3000
+python test_api.py && cd ui && npm start
 ```
 
-#### **🎮 What You Can Test**
+![AI Query Interface](docs/images/ai_query_interface.png)
 
-**1. Attack Path Analysis** 🎯
-- Select crown jewels and algorithms
-- See visual attack paths: E → DMZ → Internal → T
-- Get risk scores and AI explanations
-
-**2. AI Query Interface** 🤖
-- Ask: *"Where's my riskiest path to the database?"*
-- Try: *"What should I fix to reduce risk by 80%?"*
-- Get intelligent security recommendations
-
-**3. Remediation Simulation** 🛠️
-- Select remediation actions
-- See risk reduction percentages
-- Generate Terraform code
-
-**4. Metrics Dashboard** 📊
-- View real-time performance charts
-- Compare algorithm performance
-- Monitor system health
-
-#### **🎯 Demo Scenarios**
-
-**High-Risk Path Discovery:**
-1. Go to Attack Paths tab
-2. Select "Production Database" target
-3. Choose "Hybrid" algorithm
-4. Click "Analyze"
-5. See 92% risk path with AI explanation
-
-**AI Security Consultation:**
-1. Go to AI Query tab
-2. Click sample queries
-3. Get contextual AI responses
-4. View conversation history
-
-**Perfect for client presentations, educational purposes, and proof of concept demonstrations!** 🚀
+**Features**: Attack path analysis, AI queries, remediation simulation, metrics dashboard
 
 ## 🚀 Quick Start
 
