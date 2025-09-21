@@ -8,7 +8,7 @@
 [![React](https://img.shields.io/badge/React-18+-blue.svg)](https://reactjs.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
 
-A production-ready demonstration of Graph Neural Networks (GNNs) for cybersecurity attack path analysis with intelligent remediation workflows. This project represents a sophisticated integration of multiple Advanced AI technologies - from Graph Neural Networks and Multi-Agent Systems to RAG and MCP - all working together to solve one of the most challenging problems in cybersecurity: understanding and defending against complex attack paths in real-time. It's not just AI, it's Advanced AI that can reason about complex relationships, make autonomous decisions, and continuously learn and adapt.
+A production-ready demonstration of Graph Neural Networks (GNNs) for cybersecurity attack path analysis with intelligent remediation workflows. This project represents a sophisticated integration of multiple Advanced AI technologies - from Graph Neural Networks and Large Language Models (LLMs) to Multi-Agent Systems, RAG, and MCP - all working together to solve one of the most challenging problems in cybersecurity: understanding and defending against complex attack paths in real-time. It's not just AI, it's Advanced AI that can reason about complex relationships, make autonomous decisions, and continuously learn and adapt.
 
 ## 🌟 Highlights
 - **Top-K risky paths & assets** with node/edge risk scores and concise, graph-grounded rationales  
@@ -181,13 +181,20 @@ The GNN learns attack patterns from historical cybersecurity data, enabling it t
 ### Prerequisites
 - Docker & Docker Compose
 - Python 3.11+ (for development)
+- OpenAI API Key (for LangGraph agent)
 - 8GB+ RAM recommended
 
 ### One-Click Demo Setup
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/gnn-attack-demo.git
-cd gnn-attack-demo
+git clone https://github.com/dgatlin/gnn_attack_path.git
+cd gnn_attack_path
+
+# Setup environment variables
+./scripts/setup_env.sh
+
+# Edit .env file with your OpenAI API key
+# OPENAI_API_KEY=your_actual_api_key_here
 
 # Run the complete setup
 ./scripts/setup_demo.sh
