@@ -6,42 +6,42 @@ const MetricsDashboard = () => {
   const [timeRange, setTimeRange] = useState('24h');
   const [metrics, setMetrics] = useState(null);
 
-  // Mock data for demonstration
-  const mockMetrics = {
-    responseTime: [
-      { time: '00:00', ms: 120 },
-      { time: '04:00', ms: 95 },
-      { time: '08:00', ms: 180 },
-      { time: '12:00', ms: 150 },
-      { time: '16:00', ms: 200 },
-      { time: '20:00', ms: 110 },
-    ],
-    riskDistribution: [
-      { level: 'High', count: 12, color: '#ef4444' },
-      { level: 'Medium', count: 28, color: '#f59e0b' },
-      { level: 'Low', count: 45, color: '#10b981' },
-    ],
-    algorithmPerformance: [
-      { algorithm: 'GNN', accuracy: 94, speed: 120 },
-      { algorithm: 'Hybrid', accuracy: 89, speed: 85 },
-      { algorithm: 'Dijkstra', accuracy: 76, speed: 45 },
-      { algorithm: 'PageRank', accuracy: 82, speed: 60 },
-    ],
-    attackPaths: [
-      { path: 'External → DMZ → DB', count: 15, risk: 0.9 },
-      { path: 'User → Admin → DB', count: 8, risk: 0.7 },
-      { path: 'IoT → Network → DB', count: 12, risk: 0.8 },
-    ]
-  };
-
   useEffect(() => {
+    // Mock data for demonstration
+    const mockMetrics = {
+      responseTime: [
+        { time: '00:00', ms: 120 },
+        { time: '04:00', ms: 95 },
+        { time: '08:00', ms: 180 },
+        { time: '12:00', ms: 150 },
+        { time: '16:00', ms: 200 },
+        { time: '20:00', ms: 110 },
+      ],
+      riskDistribution: [
+        { level: 'High', count: 12, color: '#ef4444' },
+        { level: 'Medium', count: 28, color: '#f59e0b' },
+        { level: 'Low', count: 45, color: '#10b981' },
+      ],
+      algorithmPerformance: [
+        { algorithm: 'GNN', accuracy: 94, speed: 120 },
+        { algorithm: 'Hybrid', accuracy: 89, speed: 85 },
+        { algorithm: 'Dijkstra', accuracy: 76, speed: 45 },
+        { algorithm: 'PageRank', accuracy: 82, speed: 60 },
+      ],
+      attackPaths: [
+        { path: 'External → DMZ → DB', count: 15, risk: 0.9 },
+        { path: 'User → Admin → DB', count: 8, risk: 0.7 },
+        { path: 'IoT → Network → DB', count: 12, risk: 0.8 },
+      ]
+    };
+
     // Simulate loading metrics
     const loadMetrics = async () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       setMetrics(mockMetrics);
     };
     loadMetrics();
-  }, [timeRange, mockMetrics]);
+  }, [timeRange]);
 
   // const COLORS = ['#ef4444', '#f59e0b', '#10b981'];
 
