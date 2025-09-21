@@ -52,7 +52,7 @@ The mathematical foundation: `h'ᵢ = σ(Σⱼ∈Nᵢ αᵢⱼWhⱼ)` where node
 
 ### 🤖 **Agentic AI & Multi-Agent Orchestration**
 
-![Agentic AI Architecture](docs/images/agent_ai_diagram.png)
+![Agentic AI Architecture](docs/images/agent.png)
 
 **Intelligent Agentic Workflows** powered by LangGraph orchestrate specialized AI agents that work together to analyze, plan, and remediate cybersecurity threats autonomously.
 
