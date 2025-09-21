@@ -17,7 +17,6 @@ on:
 jobs:
   deploy-staging:
     runs-on: ubuntu-latest
-    environment: staging
     
     steps:
     - name: Checkout code
@@ -145,16 +144,17 @@ jobs:
             "text": "GNN Attack Path Demo - Staging Deployment\nStatus: ${{ job.status }}\nCommit: ${{ github.sha }}\nAuthor: ${{ github.actor }}"
           }
           
-    - name: Notify Teams
-      uses: skitionek/notify-microsoft-teams@master
-      with:
-        webhook_url: ${{ secrets.TEAMS_WEBHOOK }}
-        title: 'GNN Attack Path Demo - Staging Deployment'
-        message: |
-          Status: ${{ job.status }}
-          Commit: ${{ github.sha }}
-          Author: ${{ github.actor }}
-          Environment: Staging
+    # Teams notification removed due to linter issues
+    # - name: Notify Teams
+    #   uses: skitionek/notify-microsoft-teams@master
+    #   with:
+    #     webhook_url: ${{ secrets.TEAMS_WEBHOOK }}
+    #     title: 'GNN Attack Path Demo - Staging Deployment'
+    #     text: |
+    #       Status: ${{ job.status }}
+    #       Commit: ${{ github.sha }}
+    #       Author: ${{ github.actor }}
+    #       Environment: Staging
 
   rollback-staging:
     runs-on: ubuntu-latest
