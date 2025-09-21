@@ -231,25 +231,23 @@ jobs:
     steps:
     - name: Notify Slack
       uses: 8398a7/action-slack@v3
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
       with:
         status: ${{ job.status }}
         channel: '#deployments'
-        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
         fields: repo,message,commit,author,action,eventName,ref,workflow
-        text: |
-          🚀 PRODUCTION DEPLOYMENT
-          GNN Attack Path Demo - Production
-          Status: ${{ job.status }}
-          Version: ${{ github.ref_name }}
-          Commit: ${{ github.sha }}
-          Author: ${{ github.actor }}
+        custom_payload: |
+          {
+            "text": "🚀 PRODUCTION DEPLOYMENT\nGNN Attack Path Demo - Production\nStatus: ${{ job.status }}\nVersion: ${{ github.ref_name }}\nCommit: ${{ github.sha }}\nAuthor: ${{ github.actor }}"
+          }
           
     - name: Notify Teams
       uses: skitionek/notify-microsoft-teams@master
       with:
         webhook_url: ${{ secrets.TEAMS_WEBHOOK }}
         title: '🚀 GNN Attack Path Demo - Production Deployment'
-        summary: |
+        message: |
           Status: ${{ job.status }}
           Version: ${{ github.ref_name }}
           Commit: ${{ github.sha }}
@@ -315,13 +313,12 @@ jobs:
           
     - name: Notify rollback
       uses: 8398a7/action-slack@v3
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
       with:
         status: failure
         channel: '#deployments'
-        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-        text: |
-          🚨 PRODUCTION ROLLBACK INITIATED
-          GNN Attack Path Demo - Production
-          Deployment failed, rolling back to previous version
-          Version: ${{ github.ref_name }}
-          Commit: ${{ github.sha }}
+        custom_payload: |
+          {
+            "text": "🚨 PRODUCTION ROLLBACK INITIATED\nGNN Attack Path Demo - Production\nDeployment failed, rolling back to previous version\nVersion: ${{ github.ref_name }}\nCommit: ${{ github.sha }}"
+          }

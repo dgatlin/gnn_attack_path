@@ -134,23 +134,23 @@ jobs:
     steps:
     - name: Notify Slack
       uses: 8398a7/action-slack@v3
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
       with:
         status: ${{ job.status }}
         channel: '#deployments'
-        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
         fields: repo,message,commit,author,action,eventName,ref,workflow
-        text: |
-          GNN Attack Path Demo - Staging Deployment
-          Status: ${{ job.status }}
-          Commit: ${{ github.sha }}
-          Author: ${{ github.actor }}
+        custom_payload: |
+          {
+            "text": "GNN Attack Path Demo - Staging Deployment\nStatus: ${{ job.status }}\nCommit: ${{ github.sha }}\nAuthor: ${{ github.actor }}"
+          }
           
     - name: Notify Teams
       uses: skitionek/notify-microsoft-teams@master
       with:
         webhook_url: ${{ secrets.TEAMS_WEBHOOK }}
         title: 'GNN Attack Path Demo - Staging Deployment'
-        summary: |
+        message: |
           Status: ${{ job.status }}
           Commit: ${{ github.sha }}
           Author: ${{ github.actor }}
@@ -194,11 +194,12 @@ jobs:
           
     - name: Notify rollback
       uses: 8398a7/action-slack@v3
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
       with:
         status: failure
         channel: '#deployments'
-        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-        text: |
-          🚨 ROLLBACK INITIATED
-          GNN Attack Path Demo - Staging
-          Deployment failed, rolling back to previous version
+        custom_payload: |
+          {
+            "text": "🚨 ROLLBACK INITIATED\nGNN Attack Path Demo - Staging\nDeployment failed, rolling back to previous version"
+          }

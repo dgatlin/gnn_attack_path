@@ -264,12 +264,12 @@ jobs:
         
     - name: Notify cleanup completion
       uses: 8398a7/action-slack@v3
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
       with:
         status: success
         channel: '#maintenance'
-        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-        text: |
-          🧹 CLEANUP COMPLETED
-          GNN Attack Path Demo - Weekly Cleanup
-          All cleanup tasks completed successfully
-          Date: $(date)
+        custom_payload: |
+          {
+            "text": "🧹 CLEANUP COMPLETED\nGNN Attack Path Demo - Weekly Cleanup\nAll cleanup tasks completed successfully\nDate: $(date)"
+          }
