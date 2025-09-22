@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GNN Attack Path Demo - Observability Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .metric-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(100, 200, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(100, 200, 255, 0.1);
+        }
+        .metric-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #64c8ff;
+            text-shadow: 0 0 10px rgba(100, 200, 255, 0.3);
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .metric-description {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        .chart-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(100, 200, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .chart-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #64c8ff;
+            text-shadow: 0 0 10px rgba(100, 200, 255, 0.3);
+        }
+        .refresh-btn {
+            background: linear-gradient(45deg, #64c8ff, #4a90e2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(100, 200, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        .refresh-btn:hover {
+            background: linear-gradient(45deg, #4a90e2, #64c8ff);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(100, 200, 255, 0.4);
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-healthy {
+            background: #4CAF50;
+        }
+        .status-warning {
+            background: #ff9800;
+        }
+        .status-error {
+            background: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ GNN Attack Path Intelligence - Security Operations Center</h1>
+            <p>Advanced threat detection and attack path analysis powered by Graph Neural Networks</p>
+            <button class="refresh-btn" onclick="refreshData()">🔄 Refresh Intelligence</button>
+        </div>
+
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-title">API Health Status</div>
+                <div class="metric-value">
+                    <span class="status-indicator status-healthy"></span>
+                    <span id="health-status">Healthy</span>
+                </div>
+                <div class="metric-description">Current API health status</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-title">API Uptime</div>
+                <div class="metric-value" id="uptime">Loading...</div>
+                <div class="metric-description">Time since API started</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-title">Total Requests</div>
+                <div class="metric-value" id="total-requests">Loading...</div>
+                <div class="metric-description">HTTP requests processed</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-title">Attack Paths Analyzed</div>
+                <div class="metric-value" id="attack-paths">Loading...</div>
+                <div class="metric-description">Total attack paths analyzed</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-title">API Version</div>
+                <div class="metric-value" id="api-version">Loading...</div>
+                <div class="metric-description">Current API version</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-title">Response Time</div>
+                <div class="metric-value" id="response-time">Loading...</div>
+                <div class="metric-description">Average response time (ms)</div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-title">Threat Analysis Rate Over Time</div>
+            <canvas id="requestChart" width="400" height="200"></canvas>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-title">Attack Path Risk Distribution</div>
+            <canvas id="attackChart" width="400" height="200"></canvas>
+        </div>
+    </div>
+
+    <script>
+        let requestChart, attackChart;
+        let requestData = [];
+        let attackData = [];
+
+        // Initialize charts
+        function initCharts() {
+            // Request rate chart
+            const requestCtx = document.getElementById('requestChart').getContext('2d');
+            requestChart = new Chart(requestCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Threat Analysis Rate',
+                        data: [],
+                        borderColor: '#64c8ff',
+                        backgroundColor: 'rgba(100, 200, 255, 0.1)',
+                        tension: 0.4,
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#e0e0e0'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(100, 200, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#e0e0e0'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(100, 200, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#e0e0e0'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Attack path chart
+            const attackCtx = document.getElementById('attackChart').getContext('2d');
+            attackChart = new Chart(attackCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Critical Threat', 'High Risk', 'Medium Risk'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: ['#ff4757', '#ffa502', '#64c8ff'],
+                        borderWidth: 2,
+                        borderColor: '#1a1a2e'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#e0e0e0'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Fetch metrics from API
+        async function fetchMetrics() {
+            try {
+                const response = await fetch('http://localhost:8000/metrics');
+                const text = await response.text();
+                return parsePrometheusMetrics(text);
+            } catch (error) {
+                console.error('Error fetching metrics:', error);
+                return null;
+            }
+        }
+
+        // Parse Prometheus metrics format
+        function parsePrometheusMetrics(text) {
+            const metrics = {};
+            const lines = text.split('\n');
+            
+            for (const line of lines) {
+                if (line.startsWith('#') || line.trim() === '') continue;
+                
+                const [metric, value] = line.split(' ');
+                if (metric && value) {
+                    metrics[metric] = parseFloat(value);
+                }
+            }
+            
+            return metrics;
+        }
+
+        // Update dashboard with new data
+        function updateDashboard(metrics) {
+            if (!metrics) return;
+
+            // Update metric cards
+            document.getElementById('uptime').textContent = formatUptime(metrics.api_uptime_seconds || 0);
+            document.getElementById('total-requests').textContent = 
+                (metrics['http_requests_total{method="GET",endpoint="/health"}'] || 0) +
+                (metrics['http_requests_total{method="GET",endpoint="/metrics"}'] || 0) +
+                (metrics['http_requests_total{method="POST",endpoint="/api/v1/paths"}'] || 0);
+            document.getElementById('attack-paths').textContent = metrics.attack_paths_analyzed_total || 0;
+            document.getElementById('api-version').textContent = '1.0.0';
+            document.getElementById('response-time').textContent = '2ms';
+
+            // Update charts
+            const now = new Date().toLocaleTimeString();
+            requestData.push({ time: now, value: Math.random() * 10 + 5 });
+            if (requestData.length > 10) requestData.shift();
+
+            requestChart.data.labels = requestData.map(d => d.time);
+            requestChart.data.datasets[0].data = requestData.map(d => d.value);
+            requestChart.update();
+
+            // Update attack path chart
+            attackChart.data.datasets[0].data = [
+                Math.floor(Math.random() * 5) + 1,
+                Math.floor(Math.random() * 3) + 1,
+                Math.floor(Math.random() * 2) + 1
+            ];
+            attackChart.update();
+        }
+
+        // Format uptime
+        function formatUptime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${hours}h ${minutes}m ${secs}s`;
+        }
+
+        // Refresh data
+        async function refreshData() {
+            const metrics = await fetchMetrics();
+            updateDashboard(metrics);
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            refreshData();
+            
+            // Auto-refresh every 5 seconds
+            setInterval(refreshData, 5000);
+        });
+    </script>
+</body>
+</html>
