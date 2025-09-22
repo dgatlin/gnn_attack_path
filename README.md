@@ -461,6 +461,35 @@ docker-compose -f ops/docker-compose.yml up -d
 - **GCP**: Cloud Run with Cloud SQL
 - **Azure**: Container Instances with Cosmos DB
 
+## 🚀 CI/CD Status
+
+**Current Status**: All workflows are configured and running, but some features require optional secrets to be configured.
+
+### ✅ Working Features (No Secrets Required)
+- **Frontend CI**: Automated testing, linting, and building
+- **Backend CI**: Python testing, security scanning, performance validation
+- **Integration Tests**: End-to-end testing with mock data
+- **Security Scanning**: Automated vulnerability detection
+- **Performance Testing**: Load testing and regression validation
+
+### ⚠️ Limited Features (Secrets Required)
+- **Deployment**: AWS deployment requires `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
+- **Notifications**: Slack/Teams notifications require webhook URLs
+- **AI Features**: OpenAI integration requires `OPENAI_API_KEY`
+- **Database**: Neo4j integration requires database credentials
+
+### 📋 Secret Configuration
+To enable full functionality, configure secrets in **Repository Settings** → **Secrets and variables** → **Actions**:
+
+| Secret | Purpose | Required |
+|--------|---------|----------|
+| `AWS_ACCESS_KEY_ID` | AWS deployment | Optional |
+| `AWS_SECRET_ACCESS_KEY` | AWS deployment | Optional |
+| `SLACK_WEBHOOK` | Notifications | Optional |
+| `OPENAI_API_KEY` | AI features | Optional |
+
+See [CI/CD Pipeline Documentation](docs/CI_CD_PIPELINE.md) for detailed setup instructions.
+
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
