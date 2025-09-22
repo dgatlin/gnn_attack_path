@@ -46,8 +46,7 @@ jobs:
         
     - name: Install dependencies
       run: |
-        pip install torch==2.1.1
-        pip install -r requirements.txt
+        pip install -r requirements-staging.txt
         cd ui && npm ci
         
     - name: Set up environment variables
@@ -200,8 +199,7 @@ jobs:
         
     - name: Install dependencies
       run: |
-        pip install torch==2.1.1
-        pip install -r requirements.txt
+        pip install -r requirements-staging.txt
         pip install locust wrk
         
     - name: Set up environment variables
@@ -271,8 +269,7 @@ jobs:
         
     - name: Install dependencies
       run: |
-        pip install torch==2.1.1
-        pip install -r requirements.txt
+        pip install -r requirements-staging.txt
         cd ui && npm ci
         
     - name: Build and test current branch

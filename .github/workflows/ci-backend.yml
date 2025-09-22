@@ -40,10 +40,10 @@ jobs:
         
     - name: Install Python dependencies
       run: |
-        # Install PyTorch first to avoid build issues
-        pip install torch==2.1.1
-        # Then install the rest
-        pip install -r requirements.txt
+        # Install lightweight dependencies for CI
+        pip install -r requirements-staging.txt
+        # Install testing and linting dependencies
+        pip install pytest pytest-cov pytest-asyncio black isort flake8 mypy
         
     - name: Set up environment variables
       run: |
@@ -71,6 +71,14 @@ jobs:
     - name: Run integration tests
       run: |
         python -m pytest tests/integration/ -v --tb=short
+        
+    - name: Run agentic tests
+      run: |
+        python -m pytest tests/agentic/ -v --tb=short
+        
+    - name: Run observability tests
+      run: |
+        python -m pytest tests/observability/ -v --tb=short
         
     - name: Upload coverage reports
       uses: codecov/codecov-action@v3
@@ -102,8 +110,7 @@ jobs:
         
     - name: Install dependencies
       run: |
-        pip install torch==2.1.1
-        pip install -r requirements.txt
+        pip install -r requirements-staging.txt
         pip install bandit safety
         
     - name: Run Bandit security scan
@@ -137,8 +144,7 @@ jobs:
         
     - name: Install dependencies
       run: |
-        pip install torch==2.1.1
-        pip install -r requirements.txt
+        pip install -r requirements-staging.txt
         pip install locust
         
     - name: Set up environment variables
@@ -150,7 +156,7 @@ jobs:
         
     - name: Start test API
       run: |
-        python test_api.py &
+        python tests/test_api.py &
         sleep 10
         
     - name: Run performance tests

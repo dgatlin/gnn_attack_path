@@ -44,8 +44,7 @@ jobs:
         
     - name: Install Python dependencies
       run: |
-        pip install torch==2.1.1
-        pip install -r requirements.txt
+        pip install -r requirements-staging.txt
         
     - name: Install frontend dependencies
       run: |
@@ -138,8 +137,7 @@ jobs:
         
     - name: Install dependencies
       run: |
-        pip install torch==2.1.1
-        pip install -r requirements.txt
+        pip install -r requirements-staging.txt
         cd ui && npm ci
         
     - name: Set up environment variables
@@ -152,7 +150,7 @@ jobs:
     - name: Run smoke tests
       run: |
         # Test API startup
-        python test_api.py &
+        python tests/test_api.py &
         sleep 5
         
         # Test basic functionality
@@ -179,8 +177,7 @@ jobs:
         
     - name: Install dependencies
       run: |
-        pip install torch==2.1.1
-        pip install -r requirements.txt
+        pip install -r requirements-staging.txt
         pip install schemathesis
         
     - name: Set up environment variables
@@ -192,7 +189,7 @@ jobs:
         
     - name: Start API
       run: |
-        python test_api.py &
+        python tests/test_api.py &
         sleep 10
         
     - name: Run API contract tests
