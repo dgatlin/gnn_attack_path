@@ -10,14 +10,10 @@ Comprehensive testing for LLM operations including:
 - Integration testing with existing system
 """
 
-from .test_monitoring import TestLLMMonitoring
-from .test_caching import TestLLMCaching
-from .test_security import TestLLMSecurity
+from .test_monitoring import TestLLMMetrics
 from .test_integration import TestLLMIntegration
 
 __all__ = [
-    "TestLLMMonitoring",
-    "TestLLMCaching", 
-    "TestLLMSecurity",
+    "TestLLMMetrics",
     "TestLLMIntegration"
 ]
