@@ -21,7 +21,7 @@ Key Components:
 
 # from .monitoring import LLMMonitor  # Not implemented yet
 from .caching import LLMCache
-from .security import LLMSecurity
+from .security import LLMAuth
 # from .config import LLMConfig  # Not implemented yet
 # from .analytics import LLMAnalytics  # Not implemented yet
 # from .testing import LLMTesting  # Not implemented yet
@@ -29,5 +29,5 @@ from .security import LLMSecurity
 __version__ = "1.0.0"
 __all__ = [
     "LLMCache", 
-    "LLMSecurity"
+    "LLMAuth"
 ]

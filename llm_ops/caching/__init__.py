@@ -11,7 +11,7 @@ Provides intelligent caching for LLM operations including:
 """
 
 from .cache import LLMCache
-from .semantic_cache import SemanticCache
-from .prompt_cache import PromptCache
+# from .semantic_cache import SemanticCache  # Not implemented yet
+# from .prompt_cache import PromptCache  # Not implemented yet
 
-__all__ = ["LLMCache", "SemanticCache", "PromptCache"]
+__all__ = ["LLMCache"]

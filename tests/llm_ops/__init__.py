@@ -11,9 +11,9 @@ Comprehensive testing for LLM operations including:
 """
 
 from .test_monitoring import TestLLMMetrics
-from .test_integration import TestLLMIntegration
+from .test_integration import TestLLMOpsIntegration
 
 __all__ = [
     "TestLLMMetrics",
-    "TestLLMIntegration"
+    "TestLLMOpsIntegration"
 ]
