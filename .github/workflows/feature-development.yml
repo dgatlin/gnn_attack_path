@@ -14,6 +14,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
+    - name: Setup GitHub CLI
+      run: |
+        echo "Setting up GitHub CLI..."
+        # GitHub CLI is pre-installed on ubuntu-latest runners
+      
     - name: Detect changes
       id: changes
       run: |
@@ -26,6 +31,8 @@ jobs:
         
     - name: Validate frontend
       if: steps.changes.outputs.frontend_changed == 'true'
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         echo "Frontend changes detected, running frontend validation..."
         # Trigger frontend CI workflow
@@ -34,6 +41,8 @@ jobs:
         
     - name: Validate backend
       if: steps.changes.outputs.backend_changed == 'true'
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         echo "Backend changes detected, running backend validation..."
         # Trigger backend CI workflow
@@ -42,6 +51,8 @@ jobs:
         
     - name: Run integration tests
       if: steps.changes.outputs.frontend_changed == 'true' || steps.changes.outputs.backend_changed == 'true'
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         echo "Running integration tests for feature branch..."
         # Trigger integration CI workflow
@@ -56,6 +67,8 @@ jobs:
       uses: actions/checkout@v4
       
     - name: Run security scan
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         echo "Running security vulnerability scan..."
         # Trigger security workflow
