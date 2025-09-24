@@ -59,21 +59,8 @@ jobs:
         gh workflow run ci-integration.yml --ref ${{ github.ref }}
         echo "Integration tests triggered"
 
-  security-scan:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Run security scan
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: |
-        echo "Running security vulnerability scan..."
-        # Trigger security workflow
-        gh workflow run security.yml --ref ${{ github.ref }}
-        echo "Security scan triggered"
+  # Security scanning is handled by the dedicated security.yml workflow
+  # which runs automatically on pushes to feature branches
 
   build-and-deploy-preview:
     runs-on: ubuntu-latest
