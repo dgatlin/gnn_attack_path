@@ -20,7 +20,7 @@ from data.generate_synthetic_data import SyntheticDataGenerator
 from scorer.baseline import DijkstraScorer, PageRankScorer, MotifScorer, HybridScorer
 from scorer.gnn_model import EdgeEncoder, AttackPathGNN
 from scorer.service import AttackPathScoringService
-from agent.planner import planner
+from agent.planner import AttackPathPlanner
 from agent.remediator import RemediationAgent
 from agent.app import create_workflow
 from agent.mcp_server import GNNAttackPathMCPServer, MCPServerConfig
