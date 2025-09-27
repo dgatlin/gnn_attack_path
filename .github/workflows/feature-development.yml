@@ -29,35 +29,12 @@ jobs:
           echo "backend_changed=true" >> $GITHUB_OUTPUT
         fi
         
-    - name: Validate frontend
-      if: steps.changes.outputs.frontend_changed == 'true'
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: |
-        echo "Frontend changes detected, running frontend validation..."
-        # Trigger frontend CI workflow
-        gh workflow run ci-frontend.yml --ref ${{ github.ref }}
-        echo "Frontend validation triggered"
-        
-    - name: Validate backend
-      if: steps.changes.outputs.backend_changed == 'true'
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: |
-        echo "Backend changes detected, running backend validation..."
-        # Trigger backend CI workflow
-        gh workflow run ci-backend.yml --ref ${{ github.ref }}
-        echo "Backend validation triggered"
-        
-    - name: Run integration tests
+    - name: Validate changes
       if: steps.changes.outputs.frontend_changed == 'true' || steps.changes.outputs.backend_changed == 'true'
-      env:
-        GH_TOKEN: ${{ github.token }}
       run: |
-        echo "Running integration tests for feature branch..."
-        # Trigger integration CI workflow
-        gh workflow run ci-integration.yml --ref ${{ github.ref }}
-        echo "Integration tests triggered"
+        echo "Changes detected - frontend: ${{ steps.changes.outputs.frontend_changed }}, backend: ${{ steps.changes.outputs.backend_changed }}"
+        echo "Skipping workflow triggering to avoid circular dependencies"
+        echo "Individual workflows will run automatically based on their triggers"
 
   # Security scanning is handled by the dedicated security.yml workflow
   # which runs automatically on pushes to feature branches

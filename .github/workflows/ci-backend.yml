@@ -42,8 +42,8 @@ jobs:
       run: |
         # Install lightweight dependencies for CI
         pip install -r requirements-staging.txt
-        # Install testing and linting dependencies
-        pip install pytest pytest-cov pytest-asyncio black isort flake8 mypy
+        # Install additional testing and linting dependencies
+        pip install black isort flake8 mypy
         
     - name: Set up environment variables
       run: |
