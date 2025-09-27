@@ -304,3 +304,9 @@ class AttackPathAgent:
             "workflow_nodes": ["planner", "retriever", "scorer", "explainer", 
                              "remediator", "simulator", "verifier"]
         }
+
+
+def create_workflow(gnn_model_path: Optional[str] = None) -> StateGraph:
+    """Create and return a compiled workflow for attack path analysis."""
+    agent = AttackPathAgent(gnn_model_path)
+    return agent.workflow

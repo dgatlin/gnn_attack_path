@@ -1,7 +1,7 @@
 # Core dependencies
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
-pydantic==2.5.0
+pydantic==2.11.0
 python-multipart==0.0.6
 
 # Graph database
@@ -29,10 +29,10 @@ networkx==3.2.1
 cypher==0.0.1
 
 # API and utilities
-httpx==0.25.2
+httpx==0.28.1
 aiofiles==23.2.1
 python-dotenv==1.0.0
-pydantic-settings==2.1.0
+pydantic-settings==2.5.2
 
 # Monitoring and observability
 structlog==23.2.0
