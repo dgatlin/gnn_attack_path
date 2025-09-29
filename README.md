@@ -10,6 +10,10 @@
 
 A production-ready demonstration of Graph Neural Networks (GNNs) for cybersecurity attack path analysis with intelligent remediation workflows. This project represents a sophisticated integration of multiple Advanced AI technologies - from Graph Neural Networks and Large Language Models (LLMs) to Multi-Agent Systems, RAG, and MCP - all working together to solve one of the most challenging problems in cybersecurity: understanding and defending against complex attack paths in real-time. It's not just AI, it's Advanced AI that can reason about complex relationships, make autonomous decisions, and continuously learn and adapt.
 
+## 🔗 Connected Project
+
+This GNN Attack Path Demo is designed to integrate seamlessly with the [Threat Intelligence Graph project](https://github.com/dgatlin/threat_intel_graph) - a production-ready threat intelligence platform with real-time graph analytics and multi-source threat ingestion. Together, these projects form a complete cybersecurity AI ecosystem.
+
 ## 🌟 Highlights
 - **Top-K risky paths & assets** with node/edge risk scores and concise, graph-grounded rationales  
 - **Agentic remediation bundles** that minimize blast radius, with predicted Δrisk and IaC diffs (dry-run)  
