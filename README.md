@@ -12,7 +12,7 @@ A production-ready demonstration of Graph Neural Networks (GNNs) for cybersecuri
 
 ## 🔗 Connected Project
 
-This GNN Attack Path Demo is designed to integrate seamlessly with the [Threat Intelligence Graph project](https://github.com/dgatlin/threat_intel_graph) - a production-ready threat intelligence platform with real-time graph analytics and multi-source threat ingestion. Together, these projects form a complete cybersecurity AI ecosystem.
+This GNN Attack Path Demo is designed to integrate seamlessly with the [Threat Intelligence Graph project](https://github.com/dgatlin/threat_intel_graph) - a production-ready threat intelligence platform that transforms raw threat data into actionable intelligence through real-time graph analytics, multi-source threat ingestion, and advanced correlation algorithms. Together, these projects form a complete cybersecurity AI ecosystem that combines internal attack path analysis with external threat intelligence for comprehensive security insights.
 
 ## 🌟 Highlights
 - **Top-K risky paths & assets** with node/edge risk scores and concise, graph-grounded rationales  
