@@ -3,9 +3,17 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.1+-red.svg)](https://pytorch.org/)
+[![PyTorch Geometric](https://img.shields.io/badge/PyG-2.4+-orange.svg)](https://pytorch-geometric.readthedocs.io/)
 [![Neo4j](https://img.shields.io/badge/Neo4j-5.15+-green.svg)](https://neo4j.com/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-teal.svg)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-18+-blue.svg)](https://reactjs.org/)
+[![LangGraph](https://img.shields.io/badge/LangGraph-Latest-purple.svg)](https://langchain-ai.github.io/langgraph/)
+[![MCP](https://img.shields.io/badge/MCP-Protocol-yellow.svg)](https://modelcontextprotocol.io/)
+[![Optuna](https://img.shields.io/badge/Optuna-3.4+-lightblue.svg)](https://optuna.org/)
+[![MLflow](https://img.shields.io/badge/MLflow-2.9+-0194E2.svg)](https://mlflow.org/)
+[![Prometheus](https://img.shields.io/badge/Prometheus-Monitoring-E6522C.svg)](https://prometheus.io/)
+[![Grafana](https://img.shields.io/badge/Grafana-Dashboards-F46800.svg)](https://grafana.com/)
+[![Redis](https://img.shields.io/badge/Redis-Cache-DC382D.svg)](https://redis.io/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
 
 A production-ready demonstration of Graph Neural Networks (GNNs) for cybersecurity attack path analysis with intelligent remediation workflows. This project represents a sophisticated integration of multiple Advanced AI technologies - from Graph Neural Networks and Large Language Models (LLMs) to Multi-Agent Systems, RAG, and MCP - all working together to solve one of the most challenging problems in cybersecurity: understanding and defending against complex attack paths in real-time. It's not just AI, it's Advanced AI that can reason about complex relationships, make autonomous decisions, and continuously learn and adapt.
