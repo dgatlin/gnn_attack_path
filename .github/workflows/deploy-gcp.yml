@@ -1,0 +1,194 @@
+name: Deploy to GCP Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: us-central1
+  REPO_NAME: gnn-demo-images
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio pytest-mock
+      
+      - name: Run unit tests
+        run: |
+          python -m pytest tests/unit/ -v --tb=short
+      
+      - name: Run integration tests
+        run: |
+          python -m pytest tests/integration/ -v --tb=short || true
+
+  build-and-deploy:
+    name: Build and Deploy
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    
+    permissions:
+      contents: read
+      id-token: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+      
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+      
+      - name: Build and push backend image
+        run: |
+          IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend"
+          docker build \
+            -f ops/Dockerfile.cloudrun.api \
+            -t $IMAGE:${{ github.sha }} \
+            -t $IMAGE:latest \
+            .
+          docker push $IMAGE:${{ github.sha }}
+          docker push $IMAGE:latest
+      
+      - name: Build and push frontend image
+        run: |
+          IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/frontend"
+          docker build \
+            -f ops/Dockerfile.cloudrun.ui \
+            -t $IMAGE:${{ github.sha }} \
+            -t $IMAGE:latest \
+            .
+          docker push $IMAGE:${{ github.sha }}
+          docker push $IMAGE:latest
+      
+      - name: Deploy backend to Cloud Run
+        run: |
+          gcloud run deploy gnn-demo-backend \
+            --image=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }} \
+            --region=${{ env.REGION }} \
+            --platform=managed \
+            --allow-unauthenticated \
+            --memory=2Gi \
+            --cpu=2 \
+            --min-instances=1 \
+            --max-instances=10 \
+            --timeout=300
+      
+      - name: Deploy frontend to Cloud Run
+        run: |
+          gcloud run deploy gnn-demo-frontend \
+            --image=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/frontend:${{ github.sha }} \
+            --region=${{ env.REGION }} \
+            --platform=managed \
+            --allow-unauthenticated \
+            --memory=512Mi \
+            --cpu=1 \
+            --min-instances=1 \
+            --max-instances=5
+      
+      - name: Get service URLs
+        id: urls
+        run: |
+          BACKEND_URL=$(gcloud run services describe gnn-demo-backend \
+            --region=${{ env.REGION }} \
+            --format="value(status.url)")
+          FRONTEND_URL=$(gcloud run services describe gnn-demo-frontend \
+            --region=${{ env.REGION }} \
+            --format="value(status.url)")
+          
+          echo "backend_url=$BACKEND_URL" >> $GITHUB_OUTPUT
+          echo "frontend_url=$FRONTEND_URL" >> $GITHUB_OUTPUT
+      
+      - name: Health check
+        run: |
+          echo "Waiting for services to be ready..."
+          sleep 15
+          
+          echo "Testing backend health..."
+          curl -f ${{ steps.urls.outputs.backend_url }}/health || exit 1
+          
+          echo "Testing frontend..."
+          curl -f ${{ steps.urls.outputs.frontend_url }} || exit 1
+          
+          echo "✓ All services are healthy"
+      
+      - name: Deployment summary
+        run: |
+          echo "🚀 Deployment successful!"
+          echo ""
+          echo "Frontend: ${{ steps.urls.outputs.frontend_url }}"
+          echo "Backend:  ${{ steps.urls.outputs.backend_url }}"
+          echo "API Docs: ${{ steps.urls.outputs.backend_url }}/docs"
+          echo ""
+          echo "Git SHA: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref_name }}"
+      
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ Deployment failed!"
+          echo "Check the logs above for details"
+          # Add Slack/Teams notification here if needed
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+

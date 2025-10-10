@@ -468,9 +468,30 @@ cp env.example .env
 docker-compose -f ops/docker-compose.yml up -d
 ```
 
-### Cloud Deployment
+### ☁️ Cloud Deployment (GCP Cloud Run)
+
+**Deploy your live demo to Google Cloud in 10-15 minutes!**
+
+```bash
+# One-command setup and deployment
+./scripts/setup-gcp.sh
+./scripts/deploy-to-gcp.sh --full
+```
+
+**Benefits:**
+- ✅ Serverless auto-scaling infrastructure
+- ✅ HTTPS with automatic SSL certificates  
+- ✅ Cost-effective (~$7-20/month for demo)
+- ✅ Professional architecture to showcase
+- ✅ Complete with Terraform IaC and CI/CD
+
+**Documentation:**
+- 📖 [Quick Start Guide](GCP_QUICK_START.md) - 10-minute setup
+- 📚 [Detailed Deployment Guide](docs/GCP_DEPLOYMENT.md) - Complete documentation
+- 🏗️ [Terraform Configuration](iac/terraform/gcp-cloud-run/) - Infrastructure as Code
+
+**Other Cloud Platforms:**
 - **AWS**: ECS/EKS with RDS for Neo4j
-- **GCP**: Cloud Run with Cloud SQL
 - **Azure**: Container Instances with Cosmos DB
 
 ## 🚀 CI/CD Status

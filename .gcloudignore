@@ -1,0 +1,101 @@
+# .gcloudignore - Files to exclude from Cloud Build uploads
+# Similar to .gitignore but for GCP deployments
+
+# Git
+.git
+.gitignore
+.github
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+ui/node_modules/
+ui/build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.pytest_cache/
+.tox/
+.coverage
+htmlcov/
+*.cover
+
+# Terraform
+iac/terraform/**/.terraform/
+iac/terraform/**/.terraform.lock.hcl
+iac/terraform/**/terraform.tfstate*
+iac/terraform/**/terraform.tfvars
+*.tfplan
+
+# Docs
+docs/
+*.md
+README.md
+LICENSE
+
+# Development
+.env
+.env.local
+.env.*.local
+*.log
+
+# Neo4j
+neo4j/
+
+# Research & notebooks
+research/
+*.ipynb
+
+# Reports
+*-report.json
+bandit-report.json
+safety-report.json
+
+# Ops (except necessary Docker files)
+ops/docker-compose.yml
+ops/monitoring/
+ops/k6/
+
+# Scripts (not needed in deployed image)
+scripts/
+
+# Tests (not needed in deployed image)
+tests/
+
+# Examples
+examples/
+

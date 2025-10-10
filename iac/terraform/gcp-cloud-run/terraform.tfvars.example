@@ -1,0 +1,29 @@
+# Example Terraform variables
+# Copy this file to terraform.tfvars and fill in your values
+
+# Required: Your GCP Project ID
+project_id = "your-gcp-project-id"
+
+# Optional: Customize these values
+project_name = "gnn-demo"
+region       = "us-central1"
+
+# Neo4j Configuration (use Neo4j Aura free tier: https://neo4j.com/cloud/aura-free/)
+neo4j_uri      = "neo4j+s://xxxxx.databases.neo4j.io"
+neo4j_username = "neo4j"
+
+# Scaling configuration
+max_instances = 10
+
+# Labels for resource organization
+labels = {
+  environment = "demo"
+  project     = "gnn-attack-path"
+  managed_by  = "terraform"
+  owner       = "your-name"
+}
+
+# MLflow configuration
+mlflow_experiment_name = "gnn-attack-paths"
+mlflow_model_name      = "gnn-attack-path"
+

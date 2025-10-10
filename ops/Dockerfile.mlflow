@@ -1,0 +1,48 @@
+# MLflow Server Dockerfile for Cloud Run
+# Provides experiment tracking, model registry, and artifact storage
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install MLflow with all extras
+RUN pip install --no-cache-dir \
+    mlflow[extras]==2.9.1 \
+    google-cloud-storage==2.10.0 \
+    psycopg2-binary==2.9.9 \
+    pymysql==1.1.0 \
+    boto3==1.28.85
+
+# Create non-root user
+RUN useradd -m -u 1000 mlflow && \
+    mkdir -p /mlflow/data && \
+    chown -R mlflow:mlflow /mlflow
+
+USER mlflow
+
+# Cloud Run requires port 8080
+ENV PORT=8080
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Start MLflow server
+# Backend store: Where experiment metadata is stored (GCS or PostgreSQL)
+# Artifact root: Where model files and artifacts are stored (GCS)
+CMD mlflow server \
+    --host 0.0.0.0 \
+    --port ${PORT} \
+    --backend-store-uri ${MLFLOW_BACKEND_STORE_URI:-sqlite:///mlflow/data/mlflow.db} \
+    --default-artifact-root ${MLFLOW_ARTIFACT_ROOT:-/mlflow/data/artifacts} \
+    --serve-artifacts \
+    --gunicorn-opts "--timeout 300 --workers 2"
+
