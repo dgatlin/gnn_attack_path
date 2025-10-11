@@ -1,0 +1,24 @@
+name: Development
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+
+permissions:
+  contents: read
+
+jobs:
+  dev-deployment:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Development deployment
+      run: |
+        echo "✅ Development deployment ready"
+        echo "Deploying to development environment"
+        echo "This would trigger dev deployment scripts"
