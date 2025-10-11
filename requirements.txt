@@ -1,20 +1,16 @@
-# Core API dependencies only - Fast CI
+# Ultra-minimal requirements for fast CI - only core API
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 pydantic==2.11.0
 python-multipart==0.0.6
 
-# Graph database
-neo4j==5.15.0
-py2neo==2021.2.4
-
 # Basic utilities
 httpx==0.28.1
 python-dotenv==1.0.0
-structlog==23.2.0
 
 # Testing
 pytest==7.4.3
 
-# Note: Heavy ML dependencies (torch, sklearn, pandas, etc.) 
+# Note: All heavy ML dependencies (torch, sklearn, pandas, neo4j, langchain, mlflow, etc.) 
 # are installed only for production deployment, not CI
+# This keeps CI fast and reliable
