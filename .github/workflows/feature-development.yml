@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main, develop ]
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   feature-validation:
     runs-on: ubuntu-latest
@@ -22,10 +26,17 @@ jobs:
     - name: Detect changes
       id: changes
       run: |
-        if git diff --name-only HEAD~1 HEAD | grep -E '^ui/' > /dev/null; then
+        # Handle first commit on new branch
+        if git rev-list --count HEAD > 1; then
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+        else
+          CHANGED_FILES=$(git diff --name-only --root HEAD)
+        fi
+        
+        if echo "$CHANGED_FILES" | grep -E '^ui/' > /dev/null; then
           echo "frontend_changed=true" >> $GITHUB_OUTPUT
         fi
-        if git diff --name-only HEAD~1 HEAD | grep -E '^(api/|agent/|scorer/|graph/|data/|tests/)' > /dev/null; then
+        if echo "$CHANGED_FILES" | grep -E '^(api/|agent/|scorer/|graph/|data/|tests/)' > /dev/null; then
           echo "backend_changed=true" >> $GITHUB_OUTPUT
         fi
         
