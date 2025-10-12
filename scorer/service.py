@@ -2,6 +2,7 @@
 Scoring service that combines baseline and GNN approaches for attack path analysis.
 Provides a unified interface for all scoring algorithms.
 """
+import os
 import time
 from typing import Dict, List, Any, Optional, Tuple
 from pathlib import Path
@@ -32,7 +33,27 @@ class AttackPathScoringService:
         self.gnn_scorer = AttackPathGNN(device=device)
         self.gnn_loaded = False
         
-        if gnn_model_path and Path(gnn_model_path).exists():
+        # Try to load model from MLflow first
+        mlflow_uri = os.getenv('MLFLOW_TRACKING_URI')
+        model_run_id = os.getenv('MLFLOW_MODEL_RUN_ID', 'latest')  # Default to 'latest'
+        
+        if mlflow_uri:
+            try:
+                if model_run_id == 'latest':
+                    # Get the latest successful model from MLflow
+                    actual_run_id = self._get_latest_model_run_id(mlflow_uri)
+                    if actual_run_id:
+                        self.load_gnn_model_from_mlflow(actual_run_id)
+                    else:
+                        logger.warning("No trained models found in MLflow")
+                else:
+                    # Use specific run ID
+                    self.load_gnn_model_from_mlflow(model_run_id)
+            except Exception as e:
+                logger.warning("Failed to load model from MLflow, will use local path", error=str(e))
+                if gnn_model_path and Path(gnn_model_path).exists():
+                    self.load_gnn_model(gnn_model_path)
+        elif gnn_model_path and Path(gnn_model_path).exists():
             self.load_gnn_model(gnn_model_path)
         
         # Cache for performance
@@ -98,6 +119,87 @@ class AttackPathScoringService:
         except Exception as e:
             logger.error("Failed to load GNN model", error=str(e))
             self.gnn_loaded = False
+    
+    def _get_latest_model_run_id(self, mlflow_uri: str) -> Optional[str]:
+        """Get the latest successful model run ID from MLflow."""
+        try:
+            import mlflow
+            from mlflow.tracking import MlflowClient
+            
+            mlflow.set_tracking_uri(mlflow_uri)
+            client = MlflowClient()
+            
+            # Get the gnn-attack-paths experiment
+            experiment = client.get_experiment_by_name('gnn-attack-paths')
+            if not experiment:
+                logger.warning("Experiment 'gnn-attack-paths' not found in MLflow")
+                return None
+            
+            # Search for successful runs with model artifacts
+            runs = client.search_runs(
+                experiment.experiment_id,
+                filter_string="status = 'FINISHED'",
+                order_by=["start_time DESC"],
+                max_results=10
+            )
+            
+            # Find first run with model artifacts
+            for run in runs:
+                artifacts = client.list_artifacts(run.info.run_id)
+                has_model = any('model' in a.path.lower() for a in artifacts)
+                if has_model:
+                    logger.info("Found latest model", run_id=run.info.run_id, 
+                               run_name=run.data.tags.get('mlflow.runName', 'unnamed'))
+                    return run.info.run_id
+            
+            logger.warning("No runs with model artifacts found")
+            return None
+            
+        except Exception as e:
+            logger.error("Failed to get latest model from MLflow", error=str(e))
+            return None
+    
+    def load_gnn_model_from_mlflow(self, run_id: str):
+        """Load a GNN model from MLflow."""
+        try:
+            import mlflow
+            
+            # Set MLflow tracking URI
+            mlflow_uri = os.getenv('MLFLOW_TRACKING_URI')
+            if mlflow_uri:
+                mlflow.set_tracking_uri(mlflow_uri)
+            
+            # Load model from MLflow
+            model_uri = f"runs:/{run_id}/model_checkpoint/gnn_model.pth"
+            logger.info("Loading GNN model from MLflow", run_id=run_id, uri=model_uri)
+            
+            # Download the model artifact
+            local_path = mlflow.artifacts.download_artifacts(model_uri)
+            
+            # Load the model checkpoint
+            checkpoint = torch.load(local_path, map_location=self.device)
+            
+            # Build model with saved architecture
+            node_dim = checkpoint['node_dim']
+            edge_dim = checkpoint['edge_dim']
+            self.gnn_scorer.build_model(
+                node_dim, 
+                edge_dim, 
+                hidden_dim=checkpoint.get('hidden_dim', 64),
+                num_layers=checkpoint.get('num_layers', 2),
+                dropout=checkpoint.get('dropout', 0.1)
+            )
+            
+            # Load weights
+            self.gnn_scorer.model.load_state_dict(checkpoint['model_state_dict'])
+            self.gnn_scorer.model.eval()
+            self.gnn_loaded = True
+            
+            logger.info("GNN model loaded from MLflow successfully", run_id=run_id)
+        except Exception as e:
+            logger.error("Failed to load GNN model from MLflow", error=str(e), run_id=run_id)
+            self.gnn_loaded = False
+            raise
     
     def get_attack_paths(self, target: str, algorithm: str = 'hybrid', 
                         max_hops: int = 4, k: int = 5) -> List[Dict[str, Any]]:
