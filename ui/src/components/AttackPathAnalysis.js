@@ -4,7 +4,7 @@ import { Target, AlertTriangle, Clock, Zap, ChevronRight } from 'lucide-react';
 import axios from 'axios';
 
 const AttackPathAnalysis = () => {
-  const [target, setTarget] = useState('crown-jewel-db-001');
+  const [target, setTarget] = useState('asset-171');
   const [algorithm, setAlgorithm] = useState('hybrid');
   const [maxHops, setMaxHops] = useState(4);
   const [crownJewels, setCrownJewels] = useState([]);
