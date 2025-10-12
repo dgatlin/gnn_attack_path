@@ -19,11 +19,12 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy requirements
 WORKDIR /tmp
-COPY requirements.txt requirements-staging.txt ./
+COPY requirements.txt requirements-full.txt requirements-staging.txt ./
 
 # Install Python dependencies in virtual environment
+# Use requirements-full.txt for production deployment with all ML dependencies
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements-staging.txt
+    pip install --no-cache-dir -r requirements-full.txt
 
 # Final stage - minimal runtime image
 FROM python:3.11-slim
