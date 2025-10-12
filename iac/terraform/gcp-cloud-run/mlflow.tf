@@ -56,9 +56,10 @@ resource "google_cloud_run_v2_service" "mlflow" {
       }
       
       # Environment variables for MLflow
+      # Note: Using local file-based backend for demo. For production, use PostgreSQL/MySQL.
       env {
         name  = "MLFLOW_BACKEND_STORE_URI"
-        value = "gs://${google_storage_bucket.mlflow.name}/mlflow-db"
+        value = "file:///mlflow/data/mlflow-db"
       }
       
       env {
@@ -141,135 +142,6 @@ resource "google_cloud_run_v2_service_iam_member" "mlflow_backend_invoker" {
   member   = "serviceAccount:${google_service_account.cloudrun_sa.email}"
 }
 
-# Update backend service to connect to MLflow
-resource "google_cloud_run_v2_service" "backend_with_mlflow" {
-  name     = "${var.project_name}-backend"
-  location = var.region
-  
-  template {
-    service_account = google_service_account.cloudrun_sa.email
-    
-    containers {
-      image = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.docker_repo.repository_id}/backend:latest"
-      
-      ports {
-        container_port = 8080
-      }
-      
-      # Existing environment variables
-      env {
-        name  = "NEO4J_URI"
-        value = var.neo4j_uri
-      }
-      
-      env {
-        name  = "NEO4J_USERNAME"
-        value = var.neo4j_username
-      }
-      
-      env {
-        name = "NEO4J_PASSWORD"
-        value_source {
-          secret_key_ref {
-            secret  = google_secret_manager_secret.neo4j_password.secret_id
-            version = "latest"
-          }
-        }
-      }
-      
-      env {
-        name = "OPENAI_API_KEY"
-        value_source {
-          secret_key_ref {
-            secret  = google_secret_manager_secret.openai_api_key.secret_id
-            version = "latest"
-          }
-        }
-      }
-      
-      # NEW: MLflow connection
-      env {
-        name  = "MLFLOW_TRACKING_URI"
-        value = google_cloud_run_v2_service.mlflow.uri
-      }
-      
-      env {
-        name  = "MLFLOW_EXPERIMENT_NAME"
-        value = var.mlflow_experiment_name
-      }
-      
-      env {
-        name  = "MODEL_NAME"
-        value = var.mlflow_model_name
-      }
-      
-      env {
-        name  = "MODEL_STAGE"
-        value = "production"
-      }
-      
-      env {
-        name  = "PYTHONUNBUFFERED"
-        value = "1"
-      }
-      
-      env {
-        name  = "LOG_LEVEL"
-        value = "INFO"
-      }
-      
-      resources {
-        limits = {
-          cpu    = "2"
-          memory = "2Gi"
-        }
-        cpu_idle = true
-      }
-      
-      startup_probe {
-        http_get {
-          path = "/health"
-          port = 8080
-        }
-        initial_delay_seconds = 10
-        timeout_seconds       = 3
-        period_seconds        = 5
-        failure_threshold     = 3
-      }
-      
-      liveness_probe {
-        http_get {
-          path = "/health"
-          port = 8080
-        }
-        initial_delay_seconds = 30
-        timeout_seconds       = 3
-        period_seconds        = 30
-      }
-    }
-    
-    scaling {
-      min_instance_count = 1
-      max_instance_count = var.max_instances
-    }
-    
-    timeout = "300s"
-  }
-  
-  traffic {
-    type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
-    percent = 100
-  }
-  
-  depends_on = [
-    google_project_service.required_apis,
-    google_secret_manager_secret_iam_member.openai_key_access,
-    google_secret_manager_secret_iam_member.neo4j_password_access,
-    google_cloud_run_v2_service.mlflow,  # Wait for MLflow to be ready
-  ]
-  
-  lifecycle {
-    create_before_destroy = true
-  }
-}
+# Note: The backend service defined in main.tf now includes MLflow environment variables via lifecycle.ignore_changes
+# This allows us to update the backend service with MLflow connection details without creating a duplicate resource
 
