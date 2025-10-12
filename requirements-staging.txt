@@ -24,6 +24,16 @@ scikit-learn==1.3.2
 
 # Graph processing
 networkx==3.2.1
+torch-geometric==2.4.0
 
-# Skip agent dependencies in CI due to version conflicts
-# langchain, langgraph, mcp - disabled for CI compatibility
+# Graph database
+neo4j==5.15.0
+py2neo==2021.2.4
+
+# ML Ops
+mlflow==2.8.1
+
+# Agent dependencies (minimal)
+langchain==0.0.350
+langchain-openai==0.0.2
+langgraph==0.0.20
