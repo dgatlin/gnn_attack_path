@@ -67,12 +67,15 @@ class AttackPathScoringService:
         # Load nodes
         nodes_query = """
         MATCH (n)
+        WHERE n.id IS NOT NULL
         RETURN n.id as id, labels(n) as labels, properties(n) as properties
         """
         node_results = self.conn.execute_query(nodes_query)
         
         nodes = []
         for result in node_results:
+            if result['id'] is None:
+                continue  # Skip nodes without IDs
             node = result['properties']
             node['id'] = result['id']
             node['labels'] = result['labels']
@@ -81,12 +84,15 @@ class AttackPathScoringService:
         # Load edges
         edges_query = """
         MATCH (a)-[r]->(b)
+        WHERE a.id IS NOT NULL AND b.id IS NOT NULL
         RETURN a.id as source_id, b.id as target_id, type(r) as type, properties(r) as properties
         """
         edge_results = self.conn.execute_query(edges_query)
         
         edges = []
         for result in edge_results:
+            if result['source_id'] is None or result['target_id'] is None:
+                continue  # Skip edges with missing node IDs
             edge = {
                 'source_id': result['source_id'],
                 'target_id': result['target_id'],
