@@ -1,16 +1,33 @@
 """
 Remediation agent for generating and simulating security fixes.
+Uses GPT-4 for complex remediation planning and IaC generation.
 """
 from typing import Dict, List, Any, Optional
+from langchain.schema import HumanMessage
+from langchain_openai import ChatOpenAI
+import json
 import structlog
 
 logger = structlog.get_logger(__name__)
 
 
 class RemediationAgent:
-    """Generates and simulates remediation actions for attack paths."""
+    """
+    Generates and simulates remediation actions for attack paths.
+    Uses GPT-4 for complex remediation planning and IaC generation.
+    """
     
-    def __init__(self):
+    def __init__(self, model_name: str = "gpt-4"):
+        try:
+            self.llm = ChatOpenAI(model_name=model_name, temperature=0.2)
+            self.use_llm = True
+            logger.info("Remediator Agent initialized", model=model_name, agent="remediator")
+        except Exception as e:
+            logger.warning(f"Failed to initialize LLM: {e}. Falling back to rule-based mode.")
+            self.llm = None
+            self.use_llm = False
+        
+        self.model_name = model_name
         self.remediation_templates = {
             "remove_public_ingress": self._generate_sg_rule_removal,
             "apply_patch": self._generate_patch_action,
@@ -21,11 +38,88 @@ class RemediationAgent:
     
     def generate_remediation_plan(self, attack_paths: List[Dict], 
                                 constraints: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate a comprehensive remediation plan."""
+        """Generate a comprehensive remediation plan using GPT-4."""
         logger.info("Generating remediation plan", 
                    paths_count=len(attack_paths),
-                   constraints=constraints)
+                   constraints=constraints,
+                   use_llm=self.use_llm)
         
+        if self.use_llm and self.llm:
+            return self._generate_remediation_plan_with_llm(attack_paths, constraints)
+        else:
+            return self._generate_remediation_plan_rule_based(attack_paths, constraints)
+    
+    def _generate_remediation_plan_with_llm(self, attack_paths: List[Dict], 
+                                          constraints: Dict[str, Any]) -> Dict[str, Any]:
+        """Use GPT-4 to generate sophisticated remediation plan."""
+        try:
+            # Summarize attack paths for LLM
+            paths_summary = []
+            for i, path in enumerate(attack_paths[:5], 1):
+                paths_summary.append({
+                    "path_id": i,
+                    "path": path.get("path", []),
+                    "risk_score": path.get("score", 0),
+                    "vulnerabilities": path.get("vulnerabilities", [])
+                })
+            
+            prompt = f"""You are a cybersecurity remediation expert. Analyze these attack paths and create a comprehensive remediation plan.
+
+Attack Paths:
+{json.dumps(paths_summary, indent=2)}
+
+Constraints:
+{json.dumps(constraints, indent=2)}
+
+Provide a detailed remediation plan in JSON format:
+{{
+    "analysis": {{
+        "high_risk_paths": ["list of path_ids with risk > 0.8"],
+        "common_vulnerabilities": ["list of CVEs or vulnerability types"],
+        "network_issues": ["list of network security issues"],
+        "iam_issues": ["list of IAM/permission issues"],
+        "patch_requirements": ["list of systems needing patches"]
+    }},
+    "actions": [
+        {{
+            "id": "action_1",
+            "type": "remove_public_ingress | apply_patch | revoke_iam_permission | enable_mfa | network_segmentation",
+            "description": "detailed description",
+            "target": "asset or resource name",
+            "priority": "high | medium | low",
+            "effort": "low | medium | high",
+            "impact": "high | medium | low",
+            "rationale": "why this action is important"
+        }}
+    ],
+    "implementation_plan": {{
+        "phases": {{
+            "immediate": ["action_ids that can be done now"],
+            "short_term": ["action_ids within 1 week"],
+            "medium_term": ["action_ids within 1 month"]
+        }}
+    }}
+}}
+
+Focus on high-impact, low-effort actions first. Only respond with valid JSON."""
+
+            response = self.llm.invoke([HumanMessage(content=prompt)])
+            plan = json.loads(response.content)
+            
+            # Add computed fields
+            plan["estimated_risk_reduction"] = self._estimate_risk_reduction(plan.get("actions", []))
+            plan["estimated_effort"] = self._estimate_effort(plan.get("actions", []))
+            
+            logger.info("LLM-generated remediation plan", action_count=len(plan.get("actions", [])))
+            return plan
+            
+        except Exception as e:
+            logger.error(f"LLM remediation planning failed: {e}. Falling back to rule-based.")
+            return self._generate_remediation_plan_rule_based(attack_paths, constraints)
+    
+    def _generate_remediation_plan_rule_based(self, attack_paths: List[Dict], 
+                                            constraints: Dict[str, Any]) -> Dict[str, Any]:
+        """Fallback rule-based remediation planning."""
         # Analyze attack paths
         path_analysis = self._analyze_paths_for_remediation(attack_paths)
         

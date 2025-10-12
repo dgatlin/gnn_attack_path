@@ -1,9 +1,15 @@
 """
 Main agent application using LangGraph for orchestration.
+Multi-agent system with specialized LLMs:
+- Planner Agent: GPT-3.5-turbo for fast intent parsing
+- Explainer Agent: GPT-4 for detailed risk explanations  
+- Remediator Agent: GPT-4 for complex remediation planning
 """
 from typing import Dict, List, Any, Optional
 from langgraph.graph import StateGraph, END
-from langchain.schema import BaseMessage
+from langchain.schema import BaseMessage, HumanMessage
+from langchain_openai import ChatOpenAI
+import json
 import structlog
 
 from .planner import AttackPathPlanner
@@ -14,12 +20,26 @@ logger = structlog.get_logger(__name__)
 
 
 class AttackPathAgent:
-    """Main agent orchestrating attack path analysis and remediation."""
+    """
+    Main agent orchestrating attack path analysis and remediation.
+    Uses specialized LLMs for different tasks.
+    """
     
     def __init__(self, gnn_model_path: Optional[str] = None):
-        self.planner = AttackPathPlanner()
-        self.remediator = RemediationAgent()
+        # Initialize specialized agents
+        self.planner = AttackPathPlanner(model_name="gpt-3.5-turbo")  # Fast intent parsing
+        self.remediator = RemediationAgent(model_name="gpt-4")        # Complex remediation
         self.scorer = AttackPathScoringService(gnn_model_path)
+        
+        # Initialize Explainer LLM (GPT-4 for detailed explanations)
+        try:
+            self.explainer_llm = ChatOpenAI(model_name="gpt-4", temperature=0.3)
+            self.use_explainer_llm = True
+            logger.info("Explainer Agent initialized", model="gpt-4", agent="explainer")
+        except Exception as e:
+            logger.warning(f"Failed to initialize Explainer LLM: {e}. Using rule-based explanations.")
+            self.explainer_llm = None
+            self.use_explainer_llm = False
         
         # Build the agent workflow
         self.workflow = self._build_workflow()
@@ -165,30 +185,76 @@ class AttackPathAgent:
         return state
     
     def _explain_paths(self, state: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate explanations for attack paths."""
+        """Generate explanations for attack paths using GPT-4."""
         paths = state.get("attack_paths", [])
         
         try:
-            explanations = []
-            for i, path in enumerate(paths):
-                explanation = self.scorer.get_risk_explanation(path.get("path", []))
-                explanations.append({
-                    "path_id": i,
-                    "path": path.get("path", []),
-                    "score": path.get("score", 0),
-                    "explanation": explanation
-                })
+            if self.use_explainer_llm and self.explainer_llm:
+                explanations = self._explain_paths_with_llm(paths)
+            else:
+                explanations = self._explain_paths_rule_based(paths)
             
             state["explanations"] = explanations
             state["results"]["explanations"] = explanations
             
-            logger.info("Path explanations generated", count=len(explanations))
+            logger.info("Path explanations generated", count=len(explanations), use_llm=self.use_explainer_llm)
             
         except Exception as e:
             logger.error("Error generating explanations", error=str(e))
             state["errors"].append(f"Explanation error: {str(e)}")
         
         return state
+    
+    def _explain_paths_with_llm(self, paths: List[Dict]) -> List[Dict]:
+        """Use GPT-4 to generate human-readable risk explanations."""
+        try:
+            explanations = []
+            
+            for i, path in enumerate(paths[:5]):  # Top 5 paths
+                prompt = f"""You are a cybersecurity expert explaining attack paths to security teams.
+
+Attack Path #{i+1}:
+- Path: {' → '.join(path.get('path', []))}
+- Risk Score: {path.get('score', 0):.2%}
+- Vulnerabilities: {', '.join(path.get('vulnerabilities', ['None identified']))}
+
+Provide a clear, concise explanation covering:
+1. What makes this path risky (2-3 sentences)
+2. Key vulnerabilities and their impact
+3. Potential attack scenario
+4. Recommended immediate actions
+
+Keep it professional but accessible. Format as a structured explanation."""
+
+                response = self.explainer_llm.invoke([HumanMessage(content=prompt)])
+                
+                explanations.append({
+                    "path_id": i,
+                    "path": path.get("path", []),
+                    "score": path.get("score", 0),
+                    "explanation": response.content,
+                    "vulnerabilities": path.get("vulnerabilities", [])
+                })
+            
+            logger.info("LLM-generated explanations", count=len(explanations))
+            return explanations
+            
+        except Exception as e:
+            logger.error(f"LLM explanation failed: {e}. Falling back to rule-based.")
+            return self._explain_paths_rule_based(paths)
+    
+    def _explain_paths_rule_based(self, paths: List[Dict]) -> List[Dict]:
+        """Fallback rule-based explanations."""
+        explanations = []
+        for i, path in enumerate(paths):
+            explanation = self.scorer.get_risk_explanation(path.get("path", []))
+            explanations.append({
+                "path_id": i,
+                "path": path.get("path", []),
+                "score": path.get("score", 0),
+                "explanation": explanation
+            })
+        return explanations
     
     def _should_remediate(self, state: Dict[str, Any]) -> str:
         """Determine if remediation should be performed."""
