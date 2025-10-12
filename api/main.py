@@ -9,9 +9,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import structlog
 
-# from agent.app import AttackPathAgent
-# from scorer.service import AttackPathScoringService
-# Mock data functions
+from agent.app import AttackPathAgent
+from scorer.service import AttackPathScoringService
+
+# Mock data functions (kept as fallback)
 def get_mock_attack_paths(target: str, max_hops: int = 4, algorithm: str = "hybrid"):
     """Generate mock attack paths."""
     return [

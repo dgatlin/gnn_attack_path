@@ -147,6 +147,22 @@ resource "google_cloud_run_v2_service" "backend" {
         value = "INFO"
       }
       
+      # MLflow configuration
+      env {
+        name  = "MLFLOW_TRACKING_URI"
+        value = google_cloud_run_v2_service.mlflow.uri
+      }
+      
+      env {
+        name  = "MLFLOW_MODEL_RUN_ID"
+        value = "latest"
+      }
+      
+      env {
+        name  = "MLFLOW_EXPERIMENT_NAME"
+        value = var.mlflow_experiment_name
+      }
+      
       resources {
         limits = {
           cpu    = "2"
