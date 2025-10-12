@@ -25,6 +25,8 @@ class GNNHyperparameterOptimizer:
     def create_objective(self, train_data: Data, val_data: Data, 
                         test_data: Data) -> callable:
         """Create objective function for Optuna optimization."""
+        # Store train_data for dimension access
+        self.train_data = train_data
         
         def objective(trial):
             try:
@@ -86,8 +88,9 @@ class GNNHyperparameterOptimizer:
     
     def _create_model(self, params: Dict[str, Any]) -> nn.Module:
         """Create model with given parameters."""
-        node_dim = 50  # This should match your actual node feature dimension
-        edge_dim = 20  # This should match your actual edge feature dimension
+        # Get actual dimensions from train_data
+        node_dim = self.train_data.x.shape[1] if hasattr(self, 'train_data') else 23
+        edge_dim = self.train_data.edge_attr.shape[1] if hasattr(self, 'train_data') else 13
         
         if self.model_type == 'graphsage':
             return GraphSAGEModel(

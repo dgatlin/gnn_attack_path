@@ -45,9 +45,17 @@ def main():
     # Convert to PyTorch Geometric format
     from scorer.gnn_model import AttackPathGNN
     gnn = AttackPathGNN()
-    train_data, val_data, test_data = gnn.prepare_data(
+    full_data = gnn.prepare_data(
         data['assets'], data['relationships']
     )
+    
+    # Split data into train/val/test (80/10/10)
+    from torch_geometric.transforms import RandomNodeSplit
+    transform = RandomNodeSplit(num_val=0.1, num_test=0.1)
+    full_data = transform(full_data)
+    
+    # For simplicity, use same data for all splits (this is just a demo)
+    train_data = val_data = test_data = full_data
     
     logger.info("Data generated", 
                nodes=train_data.x.size(0),
