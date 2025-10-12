@@ -176,10 +176,10 @@ resource "google_cloud_run_v2_service" "backend" {
           path = "/health"
           port = 8080
         }
-        initial_delay_seconds = 10
-        timeout_seconds       = 3
-        period_seconds        = 5
-        failure_threshold     = 3
+        initial_delay_seconds = 30  # Increased for ML model loading
+        timeout_seconds       = 10  # Increased timeout
+        period_seconds        = 10  # Check every 10s
+        failure_threshold     = 6   # Allow up to 6 failures (60s total)
       }
       
       liveness_probe {

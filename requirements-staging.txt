@@ -32,6 +32,7 @@ py2neo==2021.2.4
 
 # ML Ops
 mlflow==2.8.1
+google-cloud-storage  # Required for MLflow GCS backend
 
 # Agent dependencies (minimal)
 langchain==0.0.350
