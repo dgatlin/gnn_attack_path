@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Zap, Send, Bot } from 'lucide-react';
+import axios from 'axios';
 
 const QueryInterface = () => {
   const [query, setQuery] = useState('');
@@ -25,75 +26,71 @@ const QueryInterface = () => {
     // Add user query to responses
     setResponses(prev => [...prev, { type: 'user', content: userQuery }]);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse = generateAIResponse(userQuery);
+    try {
+      // Call the real backend API
+      const response = await axios.post('/api/v1/query', {
+        query: userQuery,
+        context: {}
+      });
+
+      const aiResponse = formatAPIResponse(response.data.results);
       setResponses(prev => [...prev, { type: 'ai', content: aiResponse }]);
+    } catch (error) {
+      console.error('Failed to get AI response:', error);
+      const errorResponse = {
+        text: "Sorry, I encountered an error processing your query.",
+        details: [error.message || "Please try again or check the Attack Path Analysis tab for direct queries."],
+        recommendations: []
+      };
+      setResponses(prev => [...prev, { type: 'ai', content: errorResponse }]);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
-  const generateAIResponse = (userQuery) => {
-    const lowerQuery = userQuery.toLowerCase();
-    
-    if (lowerQuery.includes('riskiest') || lowerQuery.includes('risk')) {
+  const formatAPIResponse = (results) => {
+    const attackPaths = results.attack_paths || [];
+    const explanations = results.explanations || [];
+    const plan = results.plan || {};
+
+    if (attackPaths.length === 0) {
       return {
-        text: "I found 3 high-risk attack paths to your crown jewel database:",
+        text: "I analyzed your query and found the following:",
         details: [
-          "Path 1: External → DMZ → Internal → Database (Risk: 94%)",
-          "Path 2: Compromised User → Admin → Root → Database (Risk: 87%)",
-          "Path 3: IoT Device → Network → Database (Risk: 82%)"
+          `Target: ${plan.target || 'All crown jewels'}`,
+          `Algorithm: ${plan.algorithm || 'hybrid'}`,
+          `No direct attack paths found to the target.`,
+          "This could indicate good security posture or the need to adjust search parameters."
         ],
         recommendations: [
-          "Apply security patches to DMZ servers",
-          "Enable multi-factor authentication for admin accounts",
-          "Isolate IoT devices from critical networks"
-        ]
-      };
-    } else if (lowerQuery.includes('fix') || lowerQuery.includes('remediate')) {
-      return {
-        text: "Here are the top remediation actions to reduce risk:",
-        details: [
-          "1. Remove public ingress from security groups (Risk reduction: 45%)",
-          "2. Apply critical security patches (Risk reduction: 30%)",
-          "3. Enable MFA for all admin accounts (Risk reduction: 25%)"
-        ],
-        recommendations: [
-          "Start with removing public access - highest impact, lowest effort",
-          "Schedule patching during maintenance window",
-          "Implement MFA gradually to avoid user disruption"
-        ]
-      };
-    } else if (lowerQuery.includes('vulnerable') || lowerQuery.includes('vulnerability')) {
-      return {
-        text: "I've identified the most vulnerable assets in your network:",
-        details: [
-          "Database servers (3 critical vulnerabilities)",
-          "Web application servers (2 high-risk vulnerabilities)",
-          "Administrative workstations (1 zero-day vulnerability)"
-        ],
-        recommendations: [
-          "Prioritize database server patching immediately",
-          "Implement web application firewall rules",
-          "Isolate admin workstations from production networks"
-        ]
-      };
-    } else {
-      return {
-        text: "I can help you analyze attack paths, identify vulnerabilities, and recommend remediation actions. Try asking about:",
-        details: [
-          "• Risk assessment of specific assets",
-          "• Attack path analysis",
-          "• Security remediation recommendations",
-          "• Vulnerability prioritization"
-        ],
-        recommendations: [
-          "Be specific about what you want to analyze",
-          "Mention specific assets or attack scenarios",
-          "Ask for actionable recommendations"
+          "Try increasing max hops to find longer paths",
+          "Check if the target asset exists in the database",
+          "Use the Attack Path Analysis tab for more control"
         ]
       };
     }
+
+    // Format attack paths into readable text
+    const pathTexts = attackPaths.map((path, i) => {
+      const pathStr = path.path?.join(' → ') || 'Unknown path';
+      const score = Math.round((path.score || 0) * 100);
+      return `Path ${i + 1}: ${pathStr} (Risk: ${score}%)`;
+    });
+
+    // Extract recommendations from explanations
+    const recs = explanations.slice(0, 3).map(exp => {
+      return exp.explanation?.split('\n')[0] || "Review and remediate identified vulnerabilities";
+    });
+
+    return {
+      text: `I found ${attackPaths.length} attack path${attackPaths.length > 1 ? 's' : ''} to ${plan.target || 'the target'}:`,
+      details: pathTexts,
+      recommendations: recs.length > 0 ? recs : [
+        "Review the identified attack paths",
+        "Prioritize remediating the highest risk paths",
+        "Implement network segmentation where possible"
+      ]
+    };
   };
 
   const handleSampleQuery = (sampleQuery) => {
