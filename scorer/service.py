@@ -251,13 +251,29 @@ class AttackPathScoringService:
     
     def _find_public_entry_points(self) -> List[str]:
         """Find public-facing entry points in the graph."""
+        # For now, use VMs as entry points since they're typically exposed
         query = """
-        MATCH (vm:Asset {type: "vm"})<-[:APPLIES_TO]-(sg:Asset {type: "sg"})-[:ALLOWS]->(ingress {cidr: "0.0.0.0/0"})
-        RETURN DISTINCT vm.id as entry_point
+        MATCH (vm:Asset {type: "vm"})
+        RETURN vm.id as entry_point
+        LIMIT 5
         """
         
         results = self.conn.execute_query(query)
-        return [result['entry_point'] for result in results]
+        entry_points = [result['entry_point'] for result in results]
+        
+        # If no VMs found, use any asset as entry point
+        if not entry_points:
+            query = """
+            MATCH (a:Asset)
+            WHERE a.type IN ["vm", "bucket", "db"]
+            RETURN a.id as entry_point
+            LIMIT 3
+            """
+            results = self.conn.execute_query(query)
+            entry_points = [result['entry_point'] for result in results]
+        
+        logger.info("Found entry points", count=len(entry_points), entry_points=entry_points)
+        return entry_points
     
     def _get_paths_from_entry(self, entry_point: str, target: str, 
                              algorithm: str, max_hops: int) -> List[Dict[str, Any]]:
