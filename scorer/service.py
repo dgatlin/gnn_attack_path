@@ -272,7 +272,7 @@ class AttackPathScoringService:
             results = self.conn.execute_query(query)
             entry_points = [result['entry_point'] for result in results]
         
-        logger.info("Found entry points", count=len(entry_points), entry_points=entry_points)
+        logger.info("Found entry points", count=len(entry_points), entry_points=entry_points, timestamp=time.time())
         return entry_points
     
     def _get_paths_from_entry(self, entry_point: str, target: str, 
