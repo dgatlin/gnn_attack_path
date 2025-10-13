@@ -46,10 +46,18 @@ class AttackPathPlanner:
 
 User Query: "{user_query}"
 
+Available crown jewel assets:
+- asset-171 (crown-jewel-db-171): Database
+- asset-099 (crown-jewel-bucket-099): Storage bucket  
+- asset-170 (crown-jewel-vm-170): Virtual machine
+- asset-048 (crown-jewel-role-048): IAM role
+- asset-071 (crown-jewel-policy-071): IAM policy
+- asset-144 (crown-jewel-subnet-144): Network subnet
+
 Extract the following information and respond in JSON format:
 {{
     "intent": "find_riskiest_paths | find_attack_paths | remediate_risks | simulate_changes | general_analysis",
-    "target": "name of the target asset or null",
+    "target": "asset ID from the list above, or null if no specific target",
     "risk_threshold": float between 0.0 and 1.0,
     "max_hops": integer for maximum path length,
     "algorithm": "gnn | hybrid | dijkstra",
@@ -187,13 +195,25 @@ Only respond with valid JSON, no other text."""
     
     def _extract_target(self, query: str) -> Optional[str]:
         """Extract target asset from query."""
-        # Simple extraction - in practice, use NER
-        if "crown jewel" in query.lower():
-            return "crown-jewel-db-001"
-        elif "database" in query.lower():
-            return "db-payments"
-        elif "critical" in query.lower():
-            return "critical-asset"
+        query_lower = query.lower()
+        
+        # Map common terms to actual crown jewel IDs from our database
+        if "crown jewel" in query_lower or "crown-jewel" in query_lower:
+            return "asset-171"  # crown-jewel-db-171
+        elif "database" in query_lower or "db" in query_lower:
+            return "asset-171"  # crown-jewel-db-171
+        elif "bucket" in query_lower or "storage" in query_lower:
+            return "asset-099"  # crown-jewel-bucket-099
+        elif "vm" in query_lower or "virtual machine" in query_lower:
+            return "asset-170"  # crown-jewel-vm-170
+        elif "role" in query_lower:
+            return "asset-048"  # crown-jewel-role-048
+        elif "policy" in query_lower:
+            return "asset-071"  # crown-jewel-policy-071
+        elif "subnet" in query_lower or "network" in query_lower:
+            return "asset-144"  # crown-jewel-subnet-144
+        elif "critical" in query_lower:
+            return "asset-171"  # Default to database
         return None
     
     def _extract_risk_threshold(self, query: str) -> float:
