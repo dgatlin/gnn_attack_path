@@ -126,32 +126,49 @@ const QueryInterface = () => {
     // Format explanations naturally
     let recs = [];
     if (explanations && explanations.length > 0) {
-      // Extract the most meaningful parts of GPT-4 explanations
+      // Extract meaningful content from GPT-4 explanations
       recs = explanations.slice(0, 3).map((exp, i) => {
         if (exp.explanation) {
-          // Try to extract actionable items from explanation
-          const lines = exp.explanation.split('\n').filter(l => l.trim());
-          // Look for lines that start with action words or numbers
-          const actionLine = lines.find(l => 
-            /^(\d+\.|•|-|Recommend|Implement|Apply|Enable|Disable|Remove|Add|Review|Monitor)/i.test(l)
+          // Clean up the explanation text
+          let text = exp.explanation
+            .replace(/^(Explanation:|Risk Assessment:|Risk Analysis:)\s*/gim, '')
+            .trim();
+          
+          // Split into sentences and find actionable ones
+          const sentences = text.split(/[.!]\s+/).filter(s => s.trim().length > 20);
+          
+          // Look for sentences with action words or recommendations
+          const actionSentence = sentences.find(s => 
+            /(should|must|recommend|implement|apply|enable|consider|review|monitor|patch|update|restrict|isolate|segment)/i.test(s)
           );
-          return actionLine || lines[0] || `Strengthen security controls for path ${i + 1}`;
+          
+          if (actionSentence) {
+            return actionSentence.trim() + (actionSentence.endsWith('.') ? '' : '.');
+          }
+          
+          // If no action sentence, take the first substantial sentence
+          if (sentences.length > 0) {
+            const firstSentence = sentences[0].trim();
+            return firstSentence + (firstSentence.endsWith('.') ? '' : '.');
+          }
         }
-        return `Review and harden security controls along attack path ${i + 1}`;
-      });
-    } else {
-      // Generate contextual recommendations
+        return `Strengthen security controls along attack path ${i + 1}`;
+      }).filter(r => r && !r.startsWith('1.') && !r.startsWith('Explanation'));
+    }
+    
+    // If we didn't get good recommendations from explanations, generate contextual ones
+    if (recs.length === 0) {
       if (highRiskPaths.length > 0) {
         recs = [
-          `Focus on the ${highRiskPaths.length} high-risk path${highRiskPaths.length > 1 ? 's' : ''} first - these present the most immediate threat`,
-          "Implement network segmentation to break the attack chains you're seeing",
-          "Review and tighten access controls on the assets in these paths"
+          `${highRiskPaths.length} path${highRiskPaths.length > 1 ? 's show' : ' shows'} high risk - prioritize remediation immediately`,
+          "Implement network segmentation to break these attack chains",
+          "Review and tighten access controls on assets in the high-risk paths"
         ];
       } else {
         recs = [
-          "While risk is currently low, maintain your security posture through regular monitoring",
-          "Consider additional hardening of entry point systems to prevent future compromise",
-          "Implement continuous monitoring to detect any configuration changes that could increase risk"
+          "All paths show low risk scores - your security controls appear effective",
+          "Maintain current security posture through regular monitoring and patching",
+          "Consider additional hardening of entry point systems as a proactive measure"
         ];
       }
     }
