@@ -72,6 +72,15 @@ Only respond with valid JSON, no other text."""
             import json
             plan = json.loads(response.content)
             
+            # Post-process target: Map generic terms to asset IDs
+            if plan.get("target") and not plan["target"].startswith("asset-"):
+                mapped_target = self._map_target_to_asset_id(plan["target"])
+                if mapped_target:
+                    plan["target"] = mapped_target
+                    logger.info("Mapped LLM target to asset ID", 
+                               original=plan.get("target"), 
+                               mapped=mapped_target)
+            
             # Add actions based on intent
             plan["actions"] = self._generate_analysis_actions(plan["intent"])
             
@@ -192,6 +201,31 @@ Only respond with valid JSON, no other text."""
             return "simulate_changes"
         else:
             return "general_analysis"
+    
+    def _map_target_to_asset_id(self, target: str) -> Optional[str]:
+        """Map natural language target to actual asset ID."""
+        if not target:
+            return None
+            
+        target_lower = target.lower()
+        
+        # Map common terms to actual crown jewel IDs from our database
+        if "database" in target_lower or "db" in target_lower:
+            return "asset-171"  # crown-jewel-db-171
+        elif "bucket" in target_lower or "storage" in target_lower:
+            return "asset-099"  # crown-jewel-bucket-099
+        elif "vm" in target_lower or "virtual machine" in target_lower:
+            return "asset-170"  # crown-jewel-vm-170
+        elif "role" in target_lower:
+            return "asset-048"  # crown-jewel-role-048
+        elif "policy" in target_lower:
+            return "asset-071"  # crown-jewel-policy-071
+        elif "subnet" in target_lower or "network" in target_lower:
+            return "asset-144"  # crown-jewel-subnet-144
+        elif "critical" in target_lower or "crown" in target_lower:
+            return "asset-171"  # Default to database
+        
+        return None
     
     def _extract_target(self, query: str) -> Optional[str]:
         """Extract target asset from query."""
