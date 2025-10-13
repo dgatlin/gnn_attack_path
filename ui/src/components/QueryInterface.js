@@ -52,44 +52,114 @@ const QueryInterface = () => {
     const attackPaths = results.attack_paths || [];
     const explanations = results.explanations || [];
     const plan = results.plan || {};
+    const crownJewels = results.crown_jewels || [];
 
+    // Handle case with no paths
     if (attackPaths.length === 0) {
+      // For general queries without specific target, show crown jewels
+      if (!plan.target || plan.target === 'null') {
+        return {
+          text: "I'd be happy to help you analyze your security posture! I've identified your critical assets (crown jewels) in the environment. These are the assets that would have the highest impact if compromised:",
+          details: crownJewels.slice(0, 5).map(cj => 
+            `• ${cj.name} in ${cj.environment} - This ${cj.type} asset requires protection`
+          ),
+          recommendations: [
+            "Try asking: 'Show me attack paths to our database' to see specific vulnerabilities",
+            "I can analyze any of these crown jewels and identify how attackers might reach them",
+            "For the most comprehensive view, try 'What are the riskiest paths across all critical assets?'"
+          ]
+        };
+      }
+      
+      const targetAsset = crownJewels.find(cj => cj.id === plan.target);
+      const targetDesc = targetAsset ? `${targetAsset.name}` : plan.target;
+      
       return {
-        text: "I analyzed your query and found the following:",
+        text: `Good news! I analyzed potential attack paths to ${targetDesc} and didn't find any direct routes from external entry points.`,
         details: [
-          `Target: ${plan.target || 'All crown jewels'}`,
-          `Algorithm: ${plan.algorithm || 'hybrid'}`,
-          `No direct attack paths found to the target.`,
-          "This could indicate good security posture or the need to adjust search parameters."
+          "This suggests your asset is well-isolated from internet-facing systems",
+          "I searched up to " + (plan.max_hops || 4) + " network hops using " + (plan.algorithm || 'hybrid') + " analysis",
+          "However, this doesn't mean the asset is completely secure - internal threats or longer attack chains may still exist"
         ],
         recommendations: [
-          "Try increasing max hops to find longer paths",
-          "Check if the target asset exists in the database",
-          "Use the Attack Path Analysis tab for more control"
+          "Continue monitoring for configuration changes that could create new attack paths",
+          "Review internal access controls to prevent lateral movement",
+          "Consider increasing the max hops parameter if you want to search for longer attack chains"
         ]
       };
     }
 
-    // Format attack paths into readable text
+    // Get target name from crown jewels
+    const targetAsset = crownJewels.find(cj => cj.id === plan.target);
+    const targetName = targetAsset ? targetAsset.name : 'the target';
+    const targetType = targetAsset ? targetAsset.type : 'asset';
+
+    // Create natural language intro
+    const highRiskPaths = attackPaths.filter(p => (p.score || 0) >= 0.5);
+    const mediumRiskPaths = attackPaths.filter(p => (p.score || 0) >= 0.3 && (p.score || 0) < 0.5);
+    
+    let intro = `I've analyzed your ${targetType} (${targetName}) and identified ${attackPaths.length} potential attack path${attackPaths.length > 1 ? 's' : ''}.`;
+    
+    if (highRiskPaths.length > 0) {
+      intro += ` ${highRiskPaths.length} of these ${highRiskPaths.length > 1 ? 'are' : 'is'} high risk and ${highRiskPaths.length > 1 ? 'require' : 'requires'} immediate attention.`;
+    } else if (mediumRiskPaths.length > 0) {
+      intro += ` Most paths show medium risk levels - you should plan remediation but there's no immediate crisis.`;
+    } else {
+      intro += ` The good news is that all paths show relatively low risk scores, suggesting decent security controls are in place.`;
+    }
+
+    // Format attack paths naturally
     const pathTexts = attackPaths.map((path, i) => {
       const pathStr = path.path?.join(' → ') || 'Unknown path';
       const score = Math.round((path.score || 0) * 100);
-      return `Path ${i + 1}: ${pathStr} (Risk: ${score}%)`;
+      const riskLevel = score >= 80 ? 'Critical' : score >= 50 ? 'High' : score >= 30 ? 'Medium' : 'Low';
+      
+      // Make it more conversational
+      if (path.path && path.path.length === 2) {
+        return `**Direct path** from ${path.path[0]} (${riskLevel} risk - ${score}%)`;
+      } else if (path.path && path.path.length > 2) {
+        return `**${path.path.length-1}-hop path** through ${path.path.slice(0, -1).join(' → ')} (${riskLevel} risk - ${score}%)`;
+      }
+      return `${pathStr} (${riskLevel} risk - ${score}%)`;
     });
 
-    // Extract recommendations from explanations
-    const recs = explanations.slice(0, 3).map(exp => {
-      return exp.explanation?.split('\n')[0] || "Review and remediate identified vulnerabilities";
-    });
+    // Format explanations naturally
+    let recs = [];
+    if (explanations && explanations.length > 0) {
+      // Extract the most meaningful parts of GPT-4 explanations
+      recs = explanations.slice(0, 3).map((exp, i) => {
+        if (exp.explanation) {
+          // Try to extract actionable items from explanation
+          const lines = exp.explanation.split('\n').filter(l => l.trim());
+          // Look for lines that start with action words or numbers
+          const actionLine = lines.find(l => 
+            /^(\d+\.|•|-|Recommend|Implement|Apply|Enable|Disable|Remove|Add|Review|Monitor)/i.test(l)
+          );
+          return actionLine || lines[0] || `Strengthen security controls for path ${i + 1}`;
+        }
+        return `Review and harden security controls along attack path ${i + 1}`;
+      });
+    } else {
+      // Generate contextual recommendations
+      if (highRiskPaths.length > 0) {
+        recs = [
+          `Focus on the ${highRiskPaths.length} high-risk path${highRiskPaths.length > 1 ? 's' : ''} first - these present the most immediate threat`,
+          "Implement network segmentation to break the attack chains you're seeing",
+          "Review and tighten access controls on the assets in these paths"
+        ];
+      } else {
+        recs = [
+          "While risk is currently low, maintain your security posture through regular monitoring",
+          "Consider additional hardening of entry point systems to prevent future compromise",
+          "Implement continuous monitoring to detect any configuration changes that could increase risk"
+        ];
+      }
+    }
 
     return {
-      text: `I found ${attackPaths.length} attack path${attackPaths.length > 1 ? 's' : ''} to ${plan.target || 'the target'}:`,
+      text: intro,
       details: pathTexts,
-      recommendations: recs.length > 0 ? recs : [
-        "Review the identified attack paths",
-        "Prioritize remediating the highest risk paths",
-        "Implement network segmentation where possible"
-      ]
+      recommendations: recs
     };
   };
 
