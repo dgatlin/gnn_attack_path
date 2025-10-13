@@ -129,31 +129,36 @@ const QueryInterface = () => {
       // Extract meaningful content from GPT-4 explanations
       recs = explanations.slice(0, 3).map((exp, i) => {
         if (exp.explanation) {
-          // Clean up the explanation text
+          // Clean up ALL common GPT-4 prefixes and numbered lists
           let text = exp.explanation
-            .replace(/^(Explanation:|Risk Assessment:|Risk Analysis:)\s*/gim, '')
+            .replace(/^(Explanation:|Risk Assessment:|Risk Analysis:|Risk Factor:|Recommended Immediate Actions:|Recommendations:|Key Vulnerabilities and Their Impact:)\s*/gim, '')
+            .replace(/^\d+\.\s*/gm, '') // Remove numbered list markers
             .trim();
           
-          // Split into sentences and find actionable ones
-          const sentences = text.split(/[.!]\s+/).filter(s => s.trim().length > 20);
+          // Split into sentences
+          const sentences = text.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 20);
           
           // Look for sentences with action words or recommendations
           const actionSentence = sentences.find(s => 
-            /(should|must|recommend|implement|apply|enable|consider|review|monitor|patch|update|restrict|isolate|segment)/i.test(s)
+            /(should|must|recommend|implement|apply|enable|consider|review|monitor|patch|update|restrict|isolate|segment|maintain|conduct|ensure)/i.test(s)
           );
           
           if (actionSentence) {
-            return actionSentence.trim() + (actionSentence.endsWith('.') ? '' : '.');
+            // Clean up the action sentence
+            let cleaned = actionSentence.trim()
+              .replace(/^(Explanation:|Risk|Recommended|Recommendations?:|Actions?:)\s*/i, '');
+            return cleaned + (cleaned.endsWith('.') ? '' : '.');
           }
           
           // If no action sentence, take the first substantial sentence
           if (sentences.length > 0) {
-            const firstSentence = sentences[0].trim();
+            let firstSentence = sentences[0].trim()
+              .replace(/^(Explanation:|Risk|Recommended|Recommendations?:|Actions?:)\s*/i, '');
             return firstSentence + (firstSentence.endsWith('.') ? '' : '.');
           }
         }
         return `Strengthen security controls along attack path ${i + 1}`;
-      }).filter(r => r && !r.startsWith('1.') && !r.startsWith('Explanation'));
+      }).filter(r => r && r.length > 10 && !r.match(/^(Explanation|Risk Factor|Recommended|1\.|2\.|3\.)/i));
     }
     
     // If we didn't get good recommendations from explanations, generate contextual ones
