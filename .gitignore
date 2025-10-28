@@ -184,3 +184,20 @@ mcp_logs/
 *.pem
 *.p12
 secrets/
+
+# Build and deployment logs
+*_build.log
+*_rebuild.log
+*_training.log
+backend_*.log
+frontend_*.log
+
+# Security scan reports
+bandit-report.json
+safety-report.json
+security-*.json
+
+# Deployment summaries (keep in docs/ instead)
+*DEPLOYMENT*.md
+*GCP*.md
+*QUICK_START*.md

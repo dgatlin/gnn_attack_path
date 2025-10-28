@@ -1,23 +1,30 @@
-# Ultra-minimal dependencies for staging deployment
+# Staging/Production Requirements
+# ===============================
+# Complete dependencies for staging deployment and production
+# Used by Dockerfiles for full functionality
+
+# Core API Framework
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 pydantic==2.11.0
+pydantic-settings==2.5.2
 python-multipart==0.0.6
 
-# Basic utilities
+# HTTP and Networking
 httpx==0.28.1
-python-dotenv==1.0.0
-pydantic-settings==2.5.2
 
-# Basic monitoring
+# Configuration and Environment
+python-dotenv==1.0.0
+
+# Logging and Monitoring
 structlog==23.2.0
 
-# Testing dependencies
+# Testing dependencies for staging
 pytest==7.4.3
 pytest-asyncio==0.21.1
 pytest-cov==6.2.1
 
-# Core ML dependencies for testing
+# Core ML dependencies for production
 torch==2.2.0
 numpy>=1.26.0
 scikit-learn==1.3.2
@@ -34,7 +41,7 @@ py2neo==2021.2.4
 mlflow==2.8.1
 google-cloud-storage  # Required for MLflow GCS backend
 
-# Agent dependencies (minimal)
+# Agent dependencies
 langchain==0.0.350
 langchain-openai==0.0.2
 langgraph==0.0.20
